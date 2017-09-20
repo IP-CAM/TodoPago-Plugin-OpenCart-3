@@ -1,0 +1,44 @@
+{{ header }}
+{{ column_left }}
+{{ column_right }}
+<div id="content" style="width: 75%;">
+
+    <div class="titulos"><h2>{{ order.store_name }}</h2>
+        <hr>
+    </div>
+    <div>
+        <div class="titulos">Nro de Operaci&oacute;n:</div>
+        <em><strong>{{ order_id }}</strong></em>
+        <hr>
+    </div>
+    <div>
+        <div class="titulos">Total a pagar</div>
+        ${{ total }}
+        <hr>
+    </div>
+    <div>
+        <div class="titulos">Vencimiento</div>{{ vencimiento }}
+        <hr>
+    </div>
+    <div class="titulos"><h3>DATOS PERSONALES</h3>
+        <hr>
+    </div>
+    <div>
+        <div class="titulos">Nombre</div>{{ order.firstname " " order.lastname }}
+        <hr>
+    </div>
+    <div>
+        <div class="titulos">Podr&aacute;s pagar este cup&oacute;n en los locales de:</div>{{ empresa }}
+        <hr>
+    </div>
+
+    <img style="width: 100%; height: 100px"
+         src="{{ 'http://localhost:8888/opencart-1.5.6.4/upload/index.php?route=todopago/todopago/codebar&tipo_code=' }}{{ tipo_code }}{{ '&bar=' }}{{ bar }}"/>
+    <br/>
+    <div class="right">
+        <input type="button" name="imprimir" value="Imprimir" onclick="window.print();" class="button">
+        <a href="{{ urlPagPpal }}">Click aca para ir a la pagina principal.</a>
+    </div>
+    <br/>
+</div>
+{{ footer }}

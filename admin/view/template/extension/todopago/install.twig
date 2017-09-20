@@ -1,0 +1,74 @@
+{% if extension is empty %} {{ header }} {% endif %}
+{% if extension is empty %} {{ column_left }} {% endif %}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1>TodoPago ({{ todopago_version }})</h1>
+            <div class="pull-right">
+                <a id="install-button" class="btn btn-success" data-toggle="{{ install_button_text }}"><i
+                            class="fa fa-check"></i></a>
+                <a id="cancel-button" class="btn btn-default" data-toggle="{{ cancel_button_text }}"><i
+                            class="fa fa-reply"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-plus-circle"></i> Instalación de la extensión.</h3>
+            </div>
+            <div class="panel-body">
+                <p>Se realizarán los siguientes cambios:</p>
+                <ul>
+                    <li>Se agregará una tabla <em>todopago_transaccion</em> a su base de datos la cual guardar
+                        información sobre las transacciones realizadas por el medio de pago.
+                    </li>
+                    <li>Se seteará el código postal obligatoria para Argentina. (Esto se debe a que por cuestones de
+                        seguridad aquellos clientes que no tengan código postal no podrán pagar con este medio).
+                    </li>
+                    <li>Se agregará una nueva culumna a la tabla de zonas asignando un nuevo código a las provincias
+                        argentinas necesario para el pago.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+
+    window.onkeydown = function () {
+
+        return (event.keyCode !== 116) && (event.keyCode === 154);
+    };
+
+    history.pushState(null, null, 'index.php?route=extension/payment/todopago/confirmInstallation&{{ user_token }}');
+    window.addEventListener('popstate', function (event) {
+        history.pushState(null, null, 'index.php?route=extension/payment/todopago/confirmIninstallation&{{ user_token }}');
+    });
+
+    var clickpermitido = false;
+    $('#install-button').bind('click', function () {
+        clickpermitido = true;
+        window.location = "{{ install_button_action }}";
+    });
+
+    $('#cancel-button').bind('click', function () {
+        clickpermitido = true;
+        window.location = "{{ cancel_button_action }}";
+    });
+
+    $(window).bind('beforeunload', function (e) {
+
+        e = e || window.event;
+
+        if (clickpermitido) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        $.post("{{ cancel_button_action }}", function (data) {
+        });
+        return "{{ back_button_message }}";
+    });
+</script>
+{% if extension is empty %} {{ footer }} {% endif %}

@@ -1,0 +1,67 @@
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1>TodoPago ({{ todopago_version }})</h1>
+            <div class="pull-right"><a id="continueButton" class="btn btn-danger"
+                                       data-toggle="{{ button_continue_text }}"><i class="fa fa-check"></i></a></div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-minus-circle"></i> Desinstalación de la extensión.
+                </h3>
+            </div>
+            <div class="panel-body">
+                <p>Seleccione los campos :</p>
+                <form id="form" action="{{ button_continue_action }}" method="post"
+                      enctype="smultipart/form-data">
+                    <ul>
+                        <li>
+                            <input type="checkbox" checked="true" id="check_todopago_transaccion"
+                                   name="drop_table_todopago_transaccion"> Eliminar tabla <em>todopago_transaccion</em>,
+                            esta lleva un registro de las transacciones hechas con el medio de pago en caso de hacerlo.
+                            Ya no podr&aacute; hacer un get status de las transacciones guardadas si reinstala el plugin
+                            (Las transacciones se mantendr&aacuteán en el registro del commerce, selecciónelo si está
+                            seguro de que no volvera a instalar el medio.</input>
+                        </li>
+                        <li>
+                            <input type="checkbox" checked="true" id="check_postcode_required"
+                                   name="revert_postcode_required"> Se seteará el código postal como no
+                            obligatorio para Argentina. (Cuando se instaló la exensión este se puso
+                            obolgatorio)</input>
+                        </li>
+                        <li><input type="checkbox" checked="true" id="check_cs_code" name="drop_column_cs_code"> Se
+                            eliminará la columna agregada a la tabla de zonas que tiene el código de las
+                            provincias argentinas necesario para el pago por este medio.</input>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript"> //puentear y refactorizar
+    window.onkeydown = function () {
+        return (event.keyCode !== 116) && (event.keyCode === 154);
+    };
+    history.pushState(null, null, 'index.php?route=extension/payment/todopago/confirmInstallation&{{ user_token }}');
+    window.addEventListener('popstate', function (event) {
+        history.pushState(null, null, 'index.php?route=extension/payment/todopago/confirmInstallation&{{ user_token }}');
+    });
+    var clickpermitido = false;
+    $('#continueButton').bind('click', function (e) {
+        clickpermitido = true;
+        $('#form').submit();
+    });
+    $(window).bind('beforeunload', function (e) {
+        e = e || window.event;
+        if (clickpermitido) {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return "{{ back_button_message }}";
+    });
+</script>
+{% if extension is null %}{{ footer }}{% endif %}

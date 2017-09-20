@@ -1,0 +1,570 @@
+{{ header }}
+{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1>Todo Pago ({{ payment_todopago_version }})</h1>
+            <div class="pull-right">
+                <a onclick="$('#form').submit();" class="btn btn-primary" data-toggle="tooltip"
+                   title="{{ button_save }}"><i class="fa {{ button_save_class }}"></i></a>
+                <a href="{{ cancel }}" class="btn btn-default" data-toggle="tooltip" title="Cancelar"><i
+                            class="fa fa-reply"></i></a>
+            </div>
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                    <li>
+                        <a href="{{ breadcrumb.href }}">
+                            {{ breadcrumb.text }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if need_upgrade %}
+            <div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i>
+                Usted ha subido una nueva versión del m&oacute;dulo, para su correcto funcionamiento debe actualizarlo
+                haciendo click en el botón "Upgrade" indicado con el &iacute;cono <i
+                        class="fa {{ button_save_class }}"></i>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endif %}
+        {% if error.error_warning is not null %}
+
+            <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>
+                {{ error.error_warning }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i>Configuración de Todo Pago</h3>
+            </div>
+            <div class="panel-body">
+
+                <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form"
+                      class="form-horizontal">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#tab-general" data-toggle="tab">GENERAL</a>
+                        </li>
+                        <li><a href="#tab-test" data-toggle="tab">AMBIENTE TEST</a>
+                        </li>
+                        <li><a href="#tab-produccion" data-toggle="tab">AMBIENTE PRODUCCION</a>
+                        </li>
+                        <li><a href="#tab-estadosdelpedido" data-toggle="tab">ESTADOS DEL PEDIDO</a>
+                        </li>
+                        <li><a href="#tab-status" data-toggle="tab">STATUS DE LAS OPERACIONES</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- TAB GENERAL -->
+                        <div class="tab-pane active" id="tab-general">
+                            <input type="hidden" name="upgrade" value="{{ need_upgrade }} ?">
+                            <input type="hidden" name="payment_todopago_version" value="{{ payment_todopago_version }}">
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_status">Activar</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_status"
+                                            id="payment_todopago_status">
+                                        <option value="1" {% if payment_todopago_status %} {{ 'selected' }} {% endif %}>
+                                            {{ text_enabled }}
+                                        </option>
+                                        <option value="0" {% if payment_todopago_status == 0 %} {{ 'selected' }} {% endif %}>
+                                            {{ text_disabled }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5">
+                                    <div class="info-field col-sm-5"><em>Activa y desactiva el módulo de pago</em>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_segmentodelcomercio">Segmento
+                                    del
+                                    Comercio</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_segmentodelcomercio"
+                                            id="payment_todopago_segmentodelcomercio">
+                                        <option value="Retail" {% if payment_todopago_segmentodelcomercio == 'retail' %} {{ 'selected' }} {% endif %}>
+                                            Retail
+                                        </option>
+                                        <!--<option value="Ticketing" <?php if ($todopago_segmentodelcomercio=="Ticketing" ) echo selected?> >Ticketing</option>
+                                        <option value="Services" <?php if ($todopago_segmentodelcomercio=="Services" ) echo selected?> >Service</option>
+                                        <option value="Digital Goods" <?php if ($todopago_segmentodelcomercio=="Digital Goods" ) echo selected?> >Digital Goods</option>-->
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5"><em>La elección del segmento determina los tipos de
+                                        datos a enviar</em>
+                                </div>
+                            </div>
+                            <!--<div class="form-group required">
+                                <label class="col-sm-2 control-label" for="todopago_canaldeingresodelpedido">Canal de Ingreso del Pedido</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="todopago_canaldeingresodelpedido" id="todopago_canaldeingresodelpedido">
+                                        <option value="Web" <?php if ($todopago_canaldeingresodelpedido=="Web" ) echo selected ?>>Web</option>
+                                        <option value="Mobile" <?php if ($todopago_canaldeingresodelpedido=="Mobile" ) echo selected ?>>Mobile</option>
+                                        <option value="Telefonica" <?php if ($todopago_canaldeingresodelpedido=="Telefonica" ) echo selected ?>>Telefonica</option>
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5"><em></em>
+                                </div>
+                            </div>-->
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="payment_todopago_deadline">Dead Line</label>
+                                <div class="field col-sm-5">
+                                    <input type="number" min="0" class="form-control" name="payment_todopago_deadline"
+                                           id="payment_todopago_deadline" value="{{ payment_todopago_deadline }}"/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Días máximos para la entrega</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_modotestproduccion">Modo
+                                    test o
+                                    Producción</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_modotestproduccion"
+                                            id="payment_todopago_modotestproduccion">
+                                        <option value="test" {% if payment_todopago_modotestproduccion == 'test' %} {{ 'selected' }} {% endif %}>
+                                            Test
+                                        </option>
+                                        <option value="prod" {% if payment_todopago_modotestproduccion == 'prod' %} {{ 'selected' }} {% endif %}>
+                                            Producción
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Debe ser configurado en CONFIGURACION - AMBIENTE
+                                        TEST / PRODUCCION</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_formulario">Tipo de
+                                    formulario que
+                                    desea utilizar</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_formulario"
+                                            id="payment_todopago_formulario">
+                                        <option value="redirec" {% if payment_todopago_formulario == 'redirec' %} {{ 'selected' }} {% endif %}>
+                                            Redirección
+                                        </option>
+                                        <option value="hibrid" {% if payment_todopago_formulario == 'hibrid' %} {{ 'selected' }} {% endif %}>
+                                            Híbrido
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Puede usar un formulario integrado al comercio o
+                                        redireccionar al formulario externo</em>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_maxinstallments">Máximo de
+                                    cuotas</label>
+                                <div class="field col-sm-1">
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="habilitar"
+                                                      value="" {% if payment_todopago_maxinstallments is not null %} {{ 'checked' }} {% endif %}>
+                                            Habilitar</label>
+                                    </div>
+                                </div>
+                                <div class="field col-sm-4">
+                                    <select class="form-control" name="payment_todopago_maxinstallments"
+                                            id="payment_todopago_maxinstallments" disabled>
+                                        {% for i in 0..12 %}
+                                            *
+                                            <option value="{{ i }}">{{ i }}</option>
+                                        {% endfor %}
+                                        {{ '<script> $("select option[value=' }} {{ payment_todopago_maxinstallments }} {{ ']").attr(selected, selected); </script>' }}
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5"><em>* Seleccione la cantidad máxima de cuotas</em>
+                                </div>
+                            </div>
+
+                            <!-- TIEMPO DE VIDA DEL FORMULARIO-->
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_timeout_form_enabled">Habilitar
+                                    Tiempo de vida para el formulario de pago</label>
+                                <div class="field col-sm-1">
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="payment_todopago_timeout_form_enabled"
+                                                      name="payment_todopago_timeout_form_enabled"
+                                                      value=""{% if payment_todopago_timeout_form %}{{ 'checked' }}{% endif %}>
+                                            Habilitar</label>
+                                    </div>
+                                </div>
+                                <div class="field col-sm-4">
+                                    <input type="number" min="300000" max="21600000" class="form-control"
+                                           name="payment_todopago_timeout_form" id="payment_todopago_timeout_form"
+                                           value="{% if payment_todopago_timeout_form %}{{ payment_todopago_timeout_form }}{% else %}{{ '1800000' }}{% endif %}"
+                                           disabled/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>* ingrese el tiempo de vida del formulario en ms
+                                        (por defecto tiene el valor 1800000 Valor minimo: 300000 (5 minutos)
+                                        Valor maximo: 21600000 (6hs))</em>
+                                </div>
+                            </div>
+
+                            <!-- Vaciar carrito de compras -->
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_cart">¿Desea vaciar el
+                                    carrito de
+                                    compras luego de una operación fallida?</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_cart"
+                                            id="payment_todopago_cart">
+                                        <option value="1" {% if payment_todopago_cart %}{{ 'selected' }}{% endif %}>
+                                            {{ text_enabled }}
+                                        </option>
+                                        <option value="0" {% if payment_todopago_cart == 0 %}{{ 'selected' }}{% endif %}>
+                                            {{ text_disabled }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Validar dirección con gmaps -->
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_gmaps_validacion">¿Desea
+                                    validar la
+                                    dirección de compra con Google Maps?</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_gmaps_validacion"
+                                            id="payment_todopago_gmaps_validacion">
+                                        <option value="1" {% if payment_todopago_gmaps_validacion %}{{ 'selected' }}{% endif %}>
+                                            {{ text_enabled }}
+                                        </option>
+                                        <option value="0" {% if payment_todopago_gmaps_validacion == 0 %} {{ 'selected' }}{% endif %}>
+                                            {{ text_disabled }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- END TAB GENERAL-->
+
+                        <!-- TAB AMBIENTE TEST -->
+                        <div class="tab-pane" id="tab-test">
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_authorizationHTTPtest">Authorization
+                                    HTTP</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" name="payment_todopago_authorizationHTTPtest"
+                                           value="{{ payment_todopago_authorizationHTTPtest }}"
+                                           placeholder="Authorization" id="payment_todopago_authorizationHTTPtest"
+                                           class="form-control"/>
+                                </div>
+                                <div class="input-field col-sm-5"><em>ejemplo: PRISMA
+                                        912EC803B2CE4xxxx541068D495AB570</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_idsitetest">Id Site Todo
+                                    Pago</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" class="form-control" name="payment_todopago_idsitetest"
+                                           id="payment_todopago_idsitetest" value="{{ payment_todopago_idsitetest }}"/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Número de Comercio provisto por Todo Pago</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_securitytest">Security
+                                    code</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" class="form-control" name="payment_todopago_securitytest"
+                                           id="payment_todopago_securitytest"
+                                           value="{{ payment_todopago_securitytest }}"/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Código provisto por Todo Pago</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <div class="col-sm-2"></div>
+                                <div class="field col-sm-4">
+                                    <button type="button" id="open" class="btn btn-primary">Requerir datos</button>
+                                    <button type="button" id="borrar" class="btn btn-primary">Borrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="popup" style="display: none;">
+                            <div class="content-popup">
+
+                                <div>
+                                    <h2>Obtener credenciales <img
+                                                src="http://www.todopago.com.ar/sites/todopago.com.ar/files/logo.png">
+                                    </h2>
+
+                                    <br/>
+                                    <label class="control-label">E-mail</label>
+                                    <input id="mail" class="form-control" name="mail" type="email" value=""
+                                           placeholder="E-mail"/>
+                                    <label class="control-label">Contraseña</label>
+                                    <input id="pass" class="form-control" name="pass" type="password" value=""
+                                           placeholder="Contraseña"/>
+                                    <button id="confirm_test" style="margin:20%;"
+                                            class="btn-config-credentials btn btn-primary">Acceder
+                                    </button>
+                                    <button id="cancel" style="margin:20%;"
+                                            class="btn-config-credentials btn btn-danger">Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- END TAB AMBIENTE TEST -->
+
+                        <!-- TAB AMBIENTE PRODUCCION -->
+                        <div class="tab-pane" id="tab-produccion">
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label"
+                                       for="payment_todopago_authorizationHTTPproduccion">Authorization
+                                    HTTP</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" name="payment_todopago_authorizationHTTPproduccion"
+                                           value="{{ payment_todopago_authorizationHTTPproduccion }}"
+                                           placeholder="Authorization" id="payment_todopago_authorizationHTTPproduccion"
+                                           class="form-control"/>
+                                </div>
+                                <div class="input-field col-sm-5"><em>Se deben pasar los datos en formato json. ejemplo:
+                                        { "Authorization":"PRISMA 912EC803B2CE49E4A541068D495AB570"}</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_idsiteproduccion">Id Site
+                                    Todo
+                                    Pago</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" class="form-control" name="payment_todopago_idsiteproduccion"
+                                           id="payment_todopago_idsiteproduccion"
+                                           value="{{ payment_todopago_idsiteproduccion }}"/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Número de Comercio provisto por Todo Pago</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_securityproduccion">Security
+                                    code</label>
+                                <div class="field col-sm-5">
+                                    <input type="text" class="form-control" name="payment_todopago_securityproduccion"
+                                           id="payment_todopago_securityproduccion"
+                                           value="{{ payment_todopago_securityproduccion }}"/>
+                                </div>
+                                <div class="info-field col-sm-5"><em>Código provisto por Todo Pago</em>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <div class="col-sm-2"></div>
+                                <div class="field col-sm-4">
+                                    <button type="button" id="open_prod" class="btn btn-primary">Requerir datos</button>
+                                    <button type="button" id="borrar_prod" class="btn btn-primary">Borrar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="popup_prod" style="display: none;">
+                            <div class="content-popup">
+                                <div>
+                                    <h2>Obtener credenciales <img
+                                                src="http://www.todopago.com.ar/sites/todopago.com.ar/files/logo.png">
+                                    </h2>
+
+                                    <br/>
+                                    <label class="control-label">E-mail</label>
+                                    <input id="mail_prod" class="form-control" name="mail" type="email" value=""
+                                           placeholder="E-mail"/>
+                                    <label class="control-label">Contrase&ntilde;a</label>
+                                    <input id="pass_prod" class="form-control" name="pass" type="password" value=""
+                                           placeholder="Contraseña"/>
+                                    <button id="confirm_prod" style="margin:20%;"
+                                            class="btn-config-credentials btn btn-primary">Acceder
+                                    </button>
+                                    <button id="cancel_prod" style="margin:20%;"
+                                            class="btn-config-credentials btn btn-danger">Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!--END TAB AMBIENTE PRODUCCION -->
+
+                        <!-- TAB ESTADO DEL PEDIDO -->
+                        <div class="tab-pane" id="tab-estadosdelpedido">
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_order_status_id_pro">Estado
+                                    cuando
+                                    la transaccion ha sido iniciada</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_order_status_id_pro"
+                                            id="payment_todopago_order_status_id_pro">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"
+                                                    {% if order_status.order_status_id == payment_todopago_order_status_id_pro %} {{ "selected" }}{% endif %}>
+                                                {{ order_status.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_order_status_id_aprov">Estado
+                                    cuando
+                                    la transaccion ha sido aprobada</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_order_status_id_aprov"
+                                            id="payment_todopago_order_status_id_aprov">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"
+                                                    {% if order_status.order_status_id == payment_todopago_order_status_id_aprov %}{{ 'selected' }}{% endif %}>
+                                                {{ order_status.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_order_status_id_rech">Estado
+                                    cuando la transaccion ha sido Rechazada</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_order_status_id_rech"
+                                            id="payment_todopago_order_status_id_rech">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"
+                                                    {% if order_status.order_status_id == payment_todopago_order_status_id_rech %}{{ 'selected' }}{% endif %}>
+                                                {{ order_status.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopago_order_status_id_off">Estado
+                                    cuando
+                                    la transaccion ha sido Offline</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopago_order_status_id_off"
+                                            id="payment_todopago_order_status_id_off">
+                                        {% for order_status in order_statuses %}
+                                            <option value="{{ order_status.order_status_id }}"
+                                                    {% if order_status.order_status_id == payment_todopago_order_status_id_off %}{{ 'selected' }}{% endif %}>
+                                                {{ order_status.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- END TAB ESTADO DEL PEDIDO -->
+
+                        <!-- TAB STATUS-->
+                        <div class="tab-pane" id="tab-status">
+                            <table class="form" border="1">
+                                <script type="text/javascript">
+                                    $(document).ready(function () {
+                                        var valores = '{{ orders_array }}';
+                                        var tabla_db = '';
+                                        valores_json = JSON.parse(valores);
+                                        valores_json.forEach(function (value, key) {
+                                            tabla_db += "<tr>";
+                                            tabla_db += "<th><a onclick='verstatus(" + value.order_id + ")' style='cursor:pointer'>" + value.order_id + "</a></th>";
+                                            tabla_db += "<th>" + value.date_added + "</th>";
+                                            tabla_db += "<th>" + value.firstname + "</th>";
+                                            tabla_db += "<th>" + value.lastname + "</th>";
+                                            tabla_db += "<th>" + value.store_name + "</th>";
+                                            tabla_db += "<th>$" + value.total + "</th>";
+                                            tabla_db += "<th><a onclick='devolver(" + value.order_id + ")' style='cursor:pointer'>Devolver</a></th>";
+                                            tabla_db += "</tr>";
+                                        });
+
+                                        $("#tabla_db").prepend(tabla_db);
+                                        $('#tabla').dataTable();
+
+                                    });
+
+                                    function verstatus(order) {
+                                        $('#content').css('cursor', 'progress');
+                                        var url_get_status = '{{ url_get_status }}';
+                                        $.get(url_get_status, {
+                                            order_id: order
+                                        }, llegadaDatos);
+                                        return false;
+                                    }
+
+                                    function llegadaDatos(datos) {
+                                        $('#content').css('cursor', 'auto');
+                                        var modal = new tingle.modal({
+                                            footer: true,
+                                            stickyFooter: false,
+                                            closeMethods: ['overlay', 'button', 'escape'],
+                                            closeLabel: "Close"
+                                        });
+                                        modal.setContent(datos);
+                                        modal.open();
+
+                                    }
+
+                                </script>
+                                <link rel="stylesheet"
+                                      href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.css">
+                                <table id="tabla" class="display" cellspacing="0" width="100%">
+
+                                    <thead>
+                                    <tr>
+                                        <th>Nro</th>
+                                        <th>Fecha</th>
+                                        <th>Nombre</th>
+                                        <th>Apellido</th>
+                                        <th>Tienda</th>
+                                        <th>Total</th>
+                                        <th>devolucion</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tfoot>
+                                    <tr>
+                                        <th>Nro</th>
+                                        <th>Fecha</th>
+                                        <th>Nombre</th>
+                                        <th>Apellido</th>
+                                        <th>Tienda</th>
+                                        <th>Total</th>
+                                        <th>devolucion</th>
+                                    </tr>
+                                    </tfoot>
+
+                                    <tbody id="tabla_db">
+                                    </tbody>
+                                </table>
+                            </table>
+                        </div>
+                        <!-- END TAB STATUS-->
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}
+
+
+<!--Devoluciones-->
+<script type="text/javascript">
+    function devolver(order_id) {
+        var monto = prompt("Monto a parcial devolver (valor real del producto, sin el costo adicional) o vacío para devolución total (ej: 1.23): ", "");
+        if (monto !== null) {
+            $('#content').css('cursor', 'progress');
+            var url_devolver = '{{ url_devolver }}';
+            $.post(url_devolver, {order_id: order_id, monto: monto}, llegadaDatosDevolucion);
+        }
+        return false;
+    }
+
+    function llegadaDatosDevolucion(datos) {
+        $('#content').css('cursor', 'auto');
+        alert(datos);
+    }
+</script>
