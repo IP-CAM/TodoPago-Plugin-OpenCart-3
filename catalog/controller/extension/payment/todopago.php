@@ -97,8 +97,7 @@ class ControllerExtensionPaymentTodopago extends Controller
                 $answer = $this->callSAR($authorizationHTTP, $mode, $paramsSAR);
             } catch (Exception $e) {
                 $this->logger->error("Ha surgido un error en el fist step", $e);
-                #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_rech'), "TODO PAGO (Exception): " . $e);
-                $recordHistory = $this->addRecordHistory("TODO PAGO (Exception): " . $e);
+                $recordHistory = $this->addRecordHistory("TODO PAGO (Exception): " . $e, $this->config->get('payment_todopago_order_status_id_rech'));
                 //Si hubo un error al grabar el registro, recordHistory se convierte en ese error.
                 if ($recordHistory)
                     $mensaje = $recordHistory;
@@ -126,8 +125,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         $this->load->model('checkout/order');
         //confirma y pasa a pendiente la orden <-- este tiene que ser configurable
         try {
-            #$this->model_checkout_order->addOrderHistory($this->order_id, 1, '');
-            $this->addRecordHistory(" ");
+            $this->addRecordHistory(" ", 1);
         } catch (Exception $e) {
             $this->logger->warn("Fallo al actualizar el historial de la compra: \n" . $e);
         }
@@ -240,11 +238,10 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     /** END GMAPS **/
-
-    protected function addRecordHistory($statusMessage)
+    protected function addRecordHistory($statusMessage, $orderStatus)
     {
         try {
-            $this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_pro'), "TODO PAGO: " . $statusMessage);
+            $this->model_checkout_order->addOrderHistory($this->order_id, $orderStatus, "TODO PAGO: " . $statusMessage);
             return false;
         } catch (Exception $e) {
             $error = "Hubo un error al registrar la orden: " . $this->order_id . "\n" . $e;
@@ -289,10 +286,10 @@ class ControllerExtensionPaymentTodopago extends Controller
             $query = $this->model_extension_todopago_transaccion->recordFirstStep($this->order_id, $paramsSAR, $rta_first_step, $rta_first_step['RequestKey'], $rta_first_step['PublicRequestKey']);
             $this->logger->debug('query recordFiersStep(): ' . $query);
             #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_pro'), "TODO PAGO: " . $rta_first_step['StatusMessage']);
-            $recordFail = $this->addRecordHistory($rta_first_step['StatusMessage']);
+            $recordFail = $this->addRecordHistory($rta_first_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_pro'));
             if ($recordFail) {
                 $this->logger->warn("Error al crear nuevo registro de orden en la base de datos: \n" . $recordFail);
-                return 502;
+                return 500;
             }
             if ($this->config->get('payment_todopago_formulario') == "hibrid") {
                 return json_encode($rta_first_step);
@@ -309,7 +306,7 @@ class ControllerExtensionPaymentTodopago extends Controller
                 $this->load->model('extension/payment/todopago');
                 $statusMessage = $this->model_extension_payment_todopago->getErrorInfo($rta_first_step["StatusCode"]);
                 #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_rech'), "TODO PAGO: " . $statusMessage);
-                $recordFail = $this->addRecordHistory($statusMessage);
+                $recordFail = $this->addRecordHistory($statusMessage, $this->config->get('payment_todopago_order_status_id_rech'));
                 if ($recordFail) {
                     $this->logger->error("Hubo un error al guardar la orden nueva: " . $recordFail);
                 }
@@ -335,7 +332,7 @@ class ControllerExtensionPaymentTodopago extends Controller
 
             } else {
                 #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_rech'), "TODO PAGO: " . $rta_first_step['StatusMessage']);
-                $this->addRecordHistory($rta_first_step['StatusMessage']);
+                $this->addRecordHistory($rta_first_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_rech'));
 
                 if ($this->config->get('payment_todopago_cart') == 1) {
                     $this->load->language('checkout/cart');
@@ -438,7 +435,7 @@ class ControllerExtensionPaymentTodopago extends Controller
             $this->logger->debug('status code: ' . $rta_second_step['StatusCode']);
 
             #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_aprov'), "TODO PAGO: " . $rta_second_step['StatusMessage']);
-            $this->addRecordHistory('TODO PAGO: ' . $rta_second_step['StatusMessage']);
+            $this->addRecordHistory('TODO PAGO: ' . $rta_second_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_aprov'));
 
             // Cambio por Costo Financiero Total
             if (array_key_exists("AMOUNTBUYER", $rta_second_step['Payload']['Request'])) {
