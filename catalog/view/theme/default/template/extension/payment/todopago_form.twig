@@ -8,7 +8,6 @@
 {% elseif statusCode == 500 %}
     <script type="text/javascript">
         $('#tpForm').css("opacity", 0);
-        console.log("lelelele");
         window.location.href = "{{ todopagoFail }}";
     </script>
 {% elseif rta_server.StatusCode != -1 %}
@@ -147,6 +146,11 @@
             }
         });
 
+        function initialFormaDePago() {
+            if (formaDePago.value === "1") {
+                $(".loaded-form").show('fast');
+            }
+        }
 
         var peiChk = $("#peiCbx");
 
@@ -165,6 +169,7 @@
             }, 2000);
             setTimeout(function () {
                 $(".progress").hide('fast');
+                initialFormaDePago();
             }, 2500);
             setTimeout(function () {
                 $("#tpForm").fadeTo('fast', 1);

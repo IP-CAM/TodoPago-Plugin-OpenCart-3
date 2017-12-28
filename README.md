@@ -1,6 +1,7 @@
 <a name="inicio"></a>
-OpenCart 3
-============
+# OpenCart 3
+### Versión 1.1.0
+
 
 Plug in para la integración con gateway de pago <strong>Todo Pago</strong>
 - [Consideraciones Generales](#consideracionesgenerales)
@@ -21,7 +22,7 @@ Plug in para la integración con gateway de pago <strong>Todo Pago</strong>
 
 [](#consideracionesgenerales)
 ## Consideraciones Generales
-El plug in de pagos de <strong>Todo Pago</strong>, provee a las tiendas OpenCart de un nuevo m&eacute;todo de pago, integrando la tienda al gateway de pago.
+El plug in de pagos de <strong>Todo Pago</strong>, provee a las tiendas OpenCart de un nuevo método de pago, integrando la tienda al gateway de pago.
 La versión de este plug in esta testeada en PHP 5.6 y Opencart 3.0.2.0.
 
 Por requerimientos del medio de pago el plugin configurará un código postal como obligatorio para Argentina. Los clientes que NO tengan código postal configurado NO podrán pagar.
@@ -29,13 +30,13 @@ Por requerimientos del medio de pago el plugin configurará un código postal co
 <a name="instalacion"></a>
 ## Instalación
 1. Descomprimir el archivo opencart-plugin-master.zip. 
-2. Copiar carpeta 'catalog' y 'admin' al root de opencart con los mismos nombres.
+2. Copiar carpeta 'catalog', 'admin' y 'system al root de opencart con los mismos nombres.
 3. Verificar que al menos el usuario administrador tenga los permisos de acceso y modificación de <strong>payment/todopago</strong>.
 ![imagen de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart20/opencart2_usergroup.PNG)
 4.	Luego ir a 'extensions->payments' e ir a la opción Todo Pago e instalar.
 ![imagen de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/README.img/opencart2_configuracion.PNG)
 
-Observaci&oacute;n:
+Observación:
 Descomentar: <em>extension=php_soap.dll</em> del php.ini, ya que para la conexión al gateway se utiliza la clase <em>SoapClient</em> del API de PHP.
 
 [<sub>Volver a inicio</sub>](#inicio)

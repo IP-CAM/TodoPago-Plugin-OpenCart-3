@@ -22,19 +22,18 @@
         </div>
     </div>
     <div class="container-fluid">
-        {% if need_upgrade %}
+        {% if need_upgrade == true %}
             <div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i>
-                Usted ha subido una nueva versión del m&oacute;dulo, para su correcto funcionamiento debe actualizarlo
+                Usted ha subido una nueva versión del módulo, para su correcto funcionamiento debe actualizarlo
                 haciendo click en el botón "Upgrade" indicado con el &iacute;cono <i
                         class="fa {{ button_save_class }}"></i>
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
         {% endif %}
         {% if error.error_warning is not null %}
-
             <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>
                 {{ error.error_warning }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <button type="button" class="close" data-dismiss="alert"><i class="fa fa-close"></i></button>
             </div>
         {% endif %}
         <div class="panel panel-default">

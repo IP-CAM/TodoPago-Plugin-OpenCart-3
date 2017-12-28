@@ -42,20 +42,26 @@ class ControllerExtensionPaymentTodopago extends Controller
         $data['heading_title'] = "Todo Pago";
 
         //Upgrade verification
-        $installedVersion = $this->model_extension_payment_todopago->getVersion();
+        $installedVersion = $this->getVersion();
 
         $this->logger->debug("version instalada: " . $installedVersion);
         $this->logger->debug("Versión a instalar: " . TP_VERSION);
         $data['installed_todopago_version'] = $installedVersion;
         $data['need_upgrade'] = (TP_VERSION > $installedVersion) ? true : false;
+        // campo preparado para github
+        $data['need_update'] = false;
         $data['payment_todopago_version'] = $installedVersion;
         $data['entry_text_config_two'] = $this->language->get('text_config_two');
+        $data['action'] = $this->url->link('extension/payment/todopago', 'user_token=' . $this->session->data['user_token'], true);
+        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
 
         //Botón de Guardar / Upgrade
         if ($data['need_upgrade']) {
-            if (version_compare(TP_VERSION, '1.0.0') >= 0) {
-                $this->logger->debug($this->model_extension_payment_todopago->getVersion());
-                $this->do_install($this->model_extension_payment_todopago->getVersion());
+            #$this->logger->info("VERSION:" . version_compare(TP_VERSION, '1.0.0'));
+            if (version_compare($installedVersion, '1.0.0') == -1) {
+                $this->logger->info("Installing...");
+                $this->logger->info($installedVersion);
+                $this->do_install($installedVersion);
                 $settings['payment_todopago_version'] = $installedVersion;
                 $this->model_setting_setting->editSetting('payment_todopago', $settings);
                 $data['button_save'] = $this->language->get('text_button_save');
@@ -64,8 +70,8 @@ class ControllerExtensionPaymentTodopago extends Controller
             } else {
                 $data['button_save'] = "Upgrade";
                 $data['button_save_class'] = "fa-arrow-circle-o-up";
+                $data['action'] = $this->url->link('extension/payment/todopago/upgrade' . '&user_token=' . $this->session->data['user_token'], true);
             }
-
         } else {
             $data['button_save'] = $this->language->get('text_button_save');
             $data['button_save_class'] = "fa-save";
@@ -93,8 +99,6 @@ class ControllerExtensionPaymentTodopago extends Controller
             'href' => $this->url->link('extension/payment/todopago', 'user_token=' . $this->session->data['user_token'], true),
         );
 
-        $data['action'] = $this->url->link('extension/payment/todopago', 'user_token=' . $this->session->data['user_token'], true);
-        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
 
         //warning
         if (isset($this->error)) { //I ignore if it is the correct key
@@ -261,6 +265,13 @@ class ControllerExtensionPaymentTodopago extends Controller
         $this->response->setOutput($this->load->view($this->template, $data));
     }
 
+    public function getVersion()
+    {
+        //$actualVersion = $this->config->get('todopago_version');
+        $actualVersion = ($this->config->has('payment_todopago_version')) ? $this->config->get('payment_todopago_version') : '0.0.0';
+        return $actualVersion;
+    }
+
     public function __construct($registry)
     {
         parent::__construct($registry);
@@ -275,6 +286,7 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     public function install()
     {
+
         $this->_install('install');
         //Decomentar cuando se reactive la instalación custom $this->response->redirect($this->url->link($this->payment_todopago_routes['payment-extension'] . '/confirm_installation', 'user_token=' . $this->session->data['user_token'], true)); //Redirecciono para poder salir del ciclo de instalación y poder mostrar mi pantalla.
     }
@@ -300,25 +312,35 @@ class ControllerExtensionPaymentTodopago extends Controller
         */
     }
 
-    private function do_install($plugin_version)
+    private function do_install($plugin_version = null)
     {
         /*******************************************************************
          *Al no tener breaks entrará en todos los case posteriores.         *
          *TODAS LAS VERSIONES DEBEN APARECER,                               *
          *de lo contrario LA VERSION QUE NO APAREZCA NO PODRÁ UPGRADEARSE   *
          *******************************************************************/
+        $this->logger->debug("PLUGIN VERSION:" . $plugin_version);
+        if (is_null($plugin_version))
+            $plugin_version = '0.0.0';
+        $settings = $this->model_setting_setting->getSetting('payment_todopago');
+        $settings['payment_todopago_version'] = TP_VERSION;
         switch ($plugin_version) {
-            case '1.0.0':
-                $this->logger->debug("Upgrade to v1.0.0");
+            case '0.0.0':
+                $this->logger->info("\nInstall");
                 $statusCode = $this->createTables();
-                $this->load->model('setting/setting');
-                $settings['payment_todopago_version'] = TP_VERSION;
-                $this->model_setting_setting->editSetting('payment_todopago', $settings); //Registra en la tabla el nro de Versión a la que se ha actualizado
+            case '1.0.0':
+                $this->logger->info("\nUpgrade to v1.0.0 Changelog:\n-Release");
+            case '1.0.1':
+                $this->logger->info("\nUpgrade to v1.0.1 Changelog:\n-Fix estado orden");
+            case '1.1.0':
+                $this->logger->info("\nUpgrade to v1.1.0 Changelog:\n-Campos de versión");
         }
         if (isset($statusCode) && $statusCode !== 200) {
             return 'Error;';
-        } else
+        } else {
+            $this->model_setting_setting->editSetting('payment_todopago', $settings); //Registra en la tabla el nro de Versión a la que se ha actualizado
             return 200;
+        }
     }
 
     private function createTables()
@@ -337,8 +359,16 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
         if (empty($errores))
             return 200;
+        else if (isset($query))
+            return $query;
         else
             return 'Error';
+    }
+
+    public function upgrade()
+    {
+        $this->logger->info("Upgrading...");
+        $this->_install('upgrade');
     }
 
     public function _install($metodo)
@@ -354,33 +384,26 @@ class ControllerExtensionPaymentTodopago extends Controller
         $this->load->model('extension/todopago/transaccion_admin');
         $this->load->model('extension/todopago/addressbook_admin');
         $this->logger->info("Verifying required upgrades");
-        $actualVersion = TP_VERSION;
-        $status = $this->do_install($actualVersion);
-
-        if ($status !== 200) {
-            //if ($action == self::UPGRADE) {
-            if ($metodo == 'upgrade') {
-                $this->session->data['success'] = 'Upgrade finalizado.';
-            } else {
-                try {
-                    $this->load->model('setting/setting');
-                    $settings['payment_todopago_version'] = $actualVersion;
-                    $this->model_setting_setting->editSetting('payment_todopago', $settings); //Registra en la tabla el nro de Versión a la que se ha actualizado
-                    $this->session->data['success'] = 'Instalación finalizada.';
-                } catch (Exception $e) {
-                    $errorMessage = 'Fallo deconocido, se pedirá reintentar';
-                    $this->logger->fatal($errorMessage, $e);
-                }
-            }
+        if ($metodo == 'install')
+            $status = $this->do_install();
+        else
+            $status = $this->do_install($this->getVersion());
+        if ($status === 200) {
+            $this->logger->info('Todopago instalado correctamente!');
+        }
+        if ($status !== 200 && is_array($status)) {
+            $errorMessage = 'Fallo al' . $metodo . "en la base de datos.\n";
+            $this->logger->fatal($errorMessage . $status);
+        } else if (strtoupper($status) === 'ERROR') {
+            $errorMessage = 'Error desconocido en' . $metodo;
+            $this->logger->fatal($errorMessage);
+            $this->session->data['error'] = 'Error.';
         } else {
             $this->session->data['success'] = 'Upgraded.';
         }
-
-        //$this->response->redirect('marketplace/extension', 'user_token=' . $this->session->data['user_token'], true);
-        $this->logger->info('Todopago instalado correctamente!');
-        /*} else {
-            $this->response->redirect($this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)); //Nunca deberíamos haber llegado aquí, así que nos vamos
-        }*/ //else horrible obsoleto si no hay instalación custom
+        if ($metodo = 'upgrade'){
+            $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
+        }
     }
 
     public function _revert_installation()
@@ -563,60 +586,11 @@ class ControllerExtensionPaymentTodopago extends Controller
             $status_json = json_encode($status);
             $this->logger->info("GETSTATUS: " . $status_json);
             $rta = '';
-
-            $refunds = $status['Operations']['REFUNDS'];
-            $auxArray = array(
-                "REFUND" => $refunds
-            );
-
-            $aux = 'REFUND';
-            $auxColection = 'REFUNDS';
-
             if ($status) {
                 if (isset($status['Operations']) && is_array($status['Operations'])) {
-                    foreach ($status['Operations'] as $key => $value) {
-                        if (is_array($value) && $key == $auxColection) {
-                            $rta .= "$key: <br/>";
-                            foreach ($auxArray[$aux] as $key2 => $value2) {
-                                $rta .= $aux . " <br/>";
-                                if (is_array($value2)) {
-                                    foreach ($value2 as $key3 => $value3) {
-                                        if (is_array($value3)) {
-                                            foreach ($value3 as $key4 => $value4) {
-                                                $complete_value = json_encode($value4);
-                                                $complete_value = preg_replace_callback('/\\\\u(\w{4})/', function ($matches) {
-                                                    return html_entity_decode('&#x' . $matches[1] . ';', ENT_COMPAT, 'UTF-8');
-                                                }, $complete_value);
-                                                $rta .= "   - $key4: $complete_value <br/>";
-                                            }
-                                        } else {
-                                            $complete_value = json_encode($value3);
-                                            $complete_value = preg_replace_callback('/\\\\u(\w{4})/', function ($matches) {
-                                                return html_entity_decode('&#x' . $matches[1] . ';', ENT_COMPAT, 'UTF-8');
-                                            }, $complete_value);
-                                            $rta .= "   - $key3: $complete_value <br/>";
-                                        }
-                                    }
-                                } else {
-                                    $complete_value = json_encode($value2);
-                                    $complete_value = preg_replace_callback('/\\\\u(\w{4})/', function ($matches) {
-                                        return html_entity_decode('&#x' . $matches[1] . ';', ENT_COMPAT, 'UTF-8');
-                                    }, $complete_value);
-                                    $rta .= "   - $key2: $complete_value <br/>";
-                                }
-                            }
-                        } else {
-                            if (is_array($value)) {
-                                $rta .= "$key: <br/>";
-                            } else {
-                                $complete_value = json_encode($value);
-                                $complete_value = preg_replace_callback('/\\\\u(\w{4})/', function ($matches) {
-                                    return html_entity_decode('&#x' . $matches[1] . ';', ENT_COMPAT, 'UTF-8');
-                                }, $complete_value);
-                                $rta .= "$key: $complete_value <br/>";
-                            }
-                        }
-                    }
+                    $status3 = json_encode($status['Operations']);
+                    $status2 = json_decode($status3,TRUE);
+                    $rta .= $this->printGetStatus($status2);
                 } else {
                     $rta = 'No hay operaciones para esta orden.';
                 }
@@ -635,6 +609,22 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     }
 
+    private function printGetStatus($array, $indent = 0) {
+        $rta = '';
+
+        foreach ($array as $key => $value) {
+            if ($key !== 'nil' && $key !== "@attributes") {
+                if (is_array($value) ){
+                    $rta .= str_repeat("-", $indent) . "$key: <br/>";
+                    $rta .= $this->printGetStatus($value, $indent + 2);
+                } else {
+                    $rta .= str_repeat("-", $indent) . "$key: $value <br/>";
+                }
+            }
+        }
+
+        return $rta;
+    }
 
     private function get_authorizationHTTP()
     {

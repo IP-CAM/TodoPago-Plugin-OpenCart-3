@@ -8,9 +8,25 @@
 
 class ModelExtensionTodopagoGetorderstatus extends Model
 {
+    protected function parseAnswerSAR($serverOutput){
+        try {
+            $answer = json_decode($serverOutput);
+        } catch (Exception $e) {
+            $answer = false;
+        }
+        if (!$answer){
+            $answer = false;
+        }
+        return $answer;
+    }
+
+    protected function sliceAnswer($serverOutput){
+        return substr($serverOutput, strpos($serverOutput, '{'));
+    }
+
     public function callATodoPago($action, $orderId)
     {
-        $this->logger->debug(function_exists('curl_version'));
+        $this->logger->debug("INGRESO A CALL: " . $action . "\n" . $orderId);
         if (function_exists('curl_version'))
             $ch = curl_init();
         else {
@@ -25,14 +41,15 @@ class ModelExtensionTodopagoGetorderstatus extends Model
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $server_output = curl_exec($ch);
             curl_close($ch);
-            $answer = json_decode($server_output);
-        } else {
-            return 501;
         }
-        if (is_object($answer))
+        $answer = $this->parseAnswerSAR($server_output);
+        if (!$answer){
+            $answer = $this->parseAnswerSAR($this->sliceAnswer($server_output));
+        }
+        if ($answer && is_object($answer))
             return $answer;
         else {
-            $this->logger->error("Hay un problema de configuración, revise el log");
+            $this->logger->error("Hay un problema de configuración, revise el log\n" . print_r($server_output, 1));
             return 500;
         }
     }

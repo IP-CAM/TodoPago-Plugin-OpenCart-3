@@ -18,13 +18,6 @@ class ModelExtensionPaymentTodopago extends Model
         return $get_orders;
     }
 
-    public function getVersion()
-    {
-        //$actualVersion = $this->config->get('todopago_version');
-        $actualVersion = ($this->config->has('payment_todopago_version')) ? $this->config->get('payment_todopago_version') : '0.0.0';
-        return $actualVersion;
-    }
-
     public function setProvincesCode()
     {
         try {
