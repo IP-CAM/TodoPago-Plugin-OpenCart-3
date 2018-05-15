@@ -7,7 +7,6 @@ require_once DIR_SYSTEM . 'library/todopago/todopago_ctes.php';
 
 class ControllerExtensionPaymentTodopago extends Controller
 {
-    private $order_id;
 
     public function __construct($registry)
     {
@@ -17,51 +16,31 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     public function index()
     {
+        $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+        $this->order_id = $this->session->data['order_id'];
+        $data["amount"] = number_format((float)$order_info["total"], 2);
         $data["ambiente"] = $this->get_mode();
         $data["url_second_step"] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/second_step_todopago";
         $data["formulario"] = $this->config->get('payment_todopago_formulario');
         $data['action'] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/first_step_todopago";
-        $data['statusCode'] = 200;
-        $data['formularioExterno'] = false;
+        $data['todopagoFail'] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $order_info['order_id'];
+        $data['validacionJS'] = ($data['ambiente'] === 'test') ? TP_JS_TEST : TP_JS_PROD;
         $this->load->language('extension/payment/todopago');
         $this->load->model('extension/todopago/transaccion');
         $this->load->model('extension/payment/todopago');
         $this->load->model('checkout/order');
         $this->logger->debug("session_data: " . json_encode($this->session->data));
-        $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
         $this->logger->debug("order_info: " . json_encode($order_info));
         $this->template = 'extension/payment/todopago_form';
-        if ($data['ambiente'] == 'test')
-            $data['validacionJS'] = TP_JS_TEST;
-        else
-            $data['validacionJS'] = TP_JS_PROD;
         if ($order_info) {
             $data['order_id'] = $order_info['order_id'];
             $data['completeName'] = $order_info['payment_firstname'] . ' ' . $order_info['payment_lastname'];
             $data['mail'] = $order_info['email'];
             $this->model_extension_payment_todopago->editPaymentMethodOrder($data['order_id']);
         }
-        if (key_exists('formulario', $data) && $data["formulario"] != "hibrid") {
+        if (key_exists('formulario', $data) && $data["formulario"] != "hibrid")
             $this->template = 'extension/payment/todopago';
-        } else {
-            $this->load->model('extension/todopago/getorderstatus');
-            #$data['rta_server'] = $this->first_step_todopago(]);
-            $data['rta_server'] = $this->model_extension_todopago_getorderstatus->callATodoPago($data['action'], $data['order_id']);
-            $data['action'] = $data['formularioExterno'] = true;
-        }
-        if (key_exists('rta_server', $data) && $data['rta_server'] === 500) {
-            $mensaje = 'Algo ha fallado, por favor intente nuevamente.';
-            $data['statusCode'] = 500;
-            $data['heading'] = 'Error inesperado';
-            $data['todopagoFail'] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $data['order_id'] . "&Message=" . $mensaje;
-        } elseif (key_exists('rta_server', $data) && $data['rta_server'] === 501) {
-            $this->logger->error("Instale el módulo cURL");
-            $mensaje = 'Algo ha fallado, por favor intente nuevamente.  Chequee que esté instalado el módulo cURL en php.ini';
-            $data['statusCode'] = 500;
-            $data['heading'] = 'Error inesperado';
-            $data['todopagoFail'] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $data['order_id'] . "&Message=" . $mensaje;
-        }
-        //$this->logger->debug("data cuando entro en formulario hibrido: " . json_encode($data));
+        # $this->logger->debug("data cuando entro en formulario hibrido: " . json_encode($data) . "\n" .  $this->template);
         return $this->load->view($this->template, $data);
     }
 
@@ -78,15 +57,14 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     public function first_step_todopago()
     {
-
-        $mensaje = "";
+        $this->load->model('extension/todopago/transaccion');
         if (array_key_exists('order_id', $_POST))
             $this->order_id = $_POST['order_id'];
         elseif (isset($order_id))
             $this->order_id = $order_id;
         else
             $this->logger->warn("first_step_todopago no recibió el ID de la orden");
-        $this->prepareOrder();
+        $this->openCartPrepareOrder();
         if ($this->model_extension_todopago_transaccion->getStep($this->order_id) == $this->model_extension_todopago_transaccion->getFirstStep()) {
             $this->logger->info("First step");
             $paramsSAR = $this->getPaydata();
@@ -98,13 +76,7 @@ class ControllerExtensionPaymentTodopago extends Controller
             try {
                 $answer = $this->callSAR($authorizationHTTP, $mode, $paramsSAR);
             } catch (Exception $e) {
-                $this->logger->error("Ha surgido un error en el fist step", $e);
-                $recordHistory = $this->addRecordHistory("TODO PAGO (Exception): " . $e, $this->config->get('payment_todopago_order_status_id_rech'));
-                //Si hubo un error al grabar el registro, recordHistory se convierte en ese error.
-                if ($recordHistory)
-                    $mensaje = $recordHistory;
-                $this->logger->debug(print_r($mensaje));
-                $this->response->redirect($this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $mensaje);
+                $this->openCartRechazo($e);
                 $answer = null;
             }
         } else {
@@ -116,12 +88,24 @@ class ControllerExtensionPaymentTodopago extends Controller
         exit();
     }
 
-    private function prepareOrder()
+    protected function openCartRechazo($mensaje)
+    {
+        $this->logger->error("Ha surgido un error", $mensaje);
+        try {
+            $recordHistory = $this->addRecordHistory("TODO PAGO (Exception): " . $mensaje, $this->config->get('payment_todopago_order_status_id_rech'));
+        } catch (Exception $e) {
+            $this->logger->error($e);
+        }
+        //Si hubo un error al grabar el registro, recordHistory se convierte en ese error.
+        if ($recordHistory)
+            $this->logger->debug(print_r($recordHistory));
+        $this->response->redirect($this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $mensaje);
+    }
+
+    protected function openCartPrepareOrder()
     {
         $this->setLoggerForPayment();
-
         $this->load->model('extension/todopago/transaccion');
-
         try {
             $this->model_extension_todopago_transaccion->createRegister($this->order_id);
         } catch (Exception $e) {
@@ -130,7 +114,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         $this->load->model('checkout/order');
         //confirma y pasa a pendiente la orden <-- este tiene que ser configurable
         try {
-            $this->addRecordHistory(" ", 1);
+            $this->addRecordHistory(" ", $this->config->get('payment_todopago_order_status_id_pro'));
         } catch (Exception $e) {
             $this->logger->warn("Fallo al actualizar el historial de la compra: \n" . $e);
         }
@@ -229,8 +213,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Construye el array a pedir
-    private
-    function requiredDataBuilder($tipoDeCompra)
+    private function requiredDataBuilder($tipoDeCompra)
     {
         $arrayDeseado = array(
             'CS' . $tipoDeCompra . 'TSTREET1' => 1,
@@ -246,6 +229,7 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     protected function addRecordHistory($statusMessage, $orderStatus)
     {
+        $this->load->model('checkout/order');
         try {
             $this->model_checkout_order->addOrderHistory($this->order_id, $orderStatus, "TODO PAGO: " . $statusMessage);
             return false;
@@ -258,14 +242,51 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     private function callSAR($authorizationHTTP, $mode, $paramsSAR)
     {
-        $connector = new TodoPago\Sdk($authorizationHTTP, $mode);
-        $md5Billing = null;
-        $md5Shipping = null;
-        $paydata_comercial = $paramsSAR['comercio'];
-        $paydata_operation = $paramsSAR['operacion'];
         $this->logger->info("params SAR: " . json_encode($paramsSAR));
+        try {
+            $this->load->model('extension/todopago/sdktodopago');
+        } catch (Exception $e) {
+            $this->logger->debug($e);
+        }
+        try {
+            $rtaFirstStepSDK = $this->model_extension_todopago_sdktodopago->sendAuthorizeRequest($authorizationHTTP, $mode, $paramsSAR, $this->logger);
+        } catch (Exception $e) {
+            $rtaFirstStepSDK = false;
+            $this->logger->debug($e);
+        }
+        if (!$rtaFirstStepSDK) {
+            $this->openCartRechazo("ERROR INTERNO");
+        } else if ($rtaFirstStepSDK->code === 200) {
+            return $this->afterSar($rtaFirstStepSDK->respuesta, $paramsSAR);
+        } else {
+            $this->openCartRechazo($rtaFirstStepSDK->mensaje);
+        }
+
+
+        return 500;
+    }
+
+    protected function openCartCleanCart()
+    {
+        if ($this->config->get('payment_todopago_cart') == 1) {
+            $this->load->language('checkout/cart');
+            $this->cart->clear();
+            unset($this->session->data['vouchers']);
+            unset($this->session->data['shipping_method']);
+            unset($this->session->data['shipping_methods']);
+            unset($this->session->data['payment_method']);
+            unset($this->session->data['payment_methods']);
+            unset($this->session->data['reward']);
+        }
+    }
+
+    protected function afterSar($rtaFirstStep, $paramsSAR)
+    {
+        /* GMAPS */
+        // $md5Billing = null;
+        // $md5Shipping = null;
         /*
-         if ($this->config->get('payment_todopago_gmaps_validacion')) {
+            if ($this->config->get('payment_todopago_gmaps_validacion')) {
                     $this->load->model('extension/todopago/addressbook');
                     $md5Billing = $this->SAR_hasher($paramsSAR['operacion'], 'billing');
                     $md5Shipping = $this->SAR_hasher($paramsSAR['operacion'], 'shipping');
@@ -276,42 +297,33 @@ class ControllerExtensionPaymentTodopago extends Controller
                 if ($this->config->get('payment_todopago_gmaps_validacion') && !isset($gMapsValidator))
                     $paydata_operation = $this->getAddressbookData($paydata_operation, $md5Billing, $md5Shipping);
         */
-        try {
-            $rta_first_step = $connector->sendAuthorizeRequest($paydata_comercial, $paydata_operation);
-        } catch (Exception $e) {
-            $this->logger->warn("Hubo un problema al realizar el SAR \n" . $e);
-        }
         /*        if ($this->config->get('payment_todopago_gmaps_validacion') && isset($gMapsValidator))
                     $this->setAddressBookData($connector->getGoogleClient()->getFinalAddress(), $paramsSAR['operacion'], $md5Billing, $md5Shipping);
         */
-        if (isset($rta_first_step) && $rta_first_step["StatusCode"] == 702) {
-            $this->logger->debug("Reintento");
-            $rta_first_step = $connector->sendAuthorizeRequest($paydata_comercial, $paydata_operation);
-        }
-        $this->logger->info("response SAR: " . json_encode($rta_first_step));
-        if ($rta_first_step["StatusCode"] == -1) {
-            $query = $this->model_extension_todopago_transaccion->recordFirstStep($this->order_id, $paramsSAR, $rta_first_step, $rta_first_step['RequestKey'], $rta_first_step['PublicRequestKey']);
-            $this->logger->debug('query recordFirstStep(): ' . $query);
+        $this->logger->debug($paramsSAR);
+        if ($rtaFirstStep["StatusCode"] == -1) {
+            $this->logger->info("response SAR: " . json_encode($rtaFirstStep));
+            $query = $this->model_extension_todopago_transaccion->recordFirstStep($this->order_id, $paramsSAR, $rtaFirstStep, $rtaFirstStep['RequestKey'], $rtaFirstStep['PublicRequestKey']);
+            # $this->logger->debug('query recordFirstStep(): ' . $query);
             #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_pro'), "TODO PAGO: " . $rta_first_step['StatusMessage']);
-            $recordFail = $this->addRecordHistory($rta_first_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_pro'));
+            $recordFail = $this->addRecordHistory($rtaFirstStep['StatusMessage'], $this->config->get('payment_todopago_order_status_id_pro'));
             if ($recordFail) {
                 $this->logger->warn("Error al crear nuevo registro de orden en la base de datos: \n" . $recordFail);
                 return 500;
             }
             if ($this->config->get('payment_todopago_formulario') == "hibrid") {
-                return json_encode($rta_first_step);
+                return json_encode($rtaFirstStep);
             } else {
-                header('Location: ' . $rta_first_step['URL_Request']);
+                header('Location: ' . $rtaFirstStep['URL_Request']);
             }
             //$this->response->redirect($rta_first_step['URL_Request']);
 
         } else {
-            $query = $this->model_extension_todopago_transaccion->recordFirstStep($this->order_id, $paramsSAR, $rta_first_step);
-            $this->logger->debug('query recordFirstStep(): ' . $query);
-
-            if ($rta_first_step["StatusCode"] >= 98000 && $rta_first_step["StatusCode"] < 99000) {
+            $query = $this->model_extension_todopago_transaccion->recordFirstStep($this->order_id, $paramsSAR, $rtaFirstStep);
+            # $this->logger->debug('query recordFirstStep(): ' . $query);
+            if ($rtaFirstStep["StatusCode"] >= 98000 && $rtaFirstStep["StatusCode"] < 99000) {
                 $this->load->model('extension/payment/todopago');
-                $statusMessage = $this->model_extension_payment_todopago->getErrorInfo($rta_first_step["StatusCode"]);
+                $statusMessage = $this->model_extension_payment_todopago->getErrorInfo($rtaFirstStep["StatusCode"]);
                 #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_rech'), "TODO PAGO: " . $statusMessage);
                 $recordFail = $this->addRecordHistory($statusMessage, $this->config->get('payment_todopago_order_status_id_rech'));
                 if ($recordFail) {
@@ -319,44 +331,22 @@ class ControllerExtensionPaymentTodopago extends Controller
                 }
                 $this->logger->info("Modulo de pago - TodoPago ==> Error de CS --> " . $statusMessage);
 
-                if ($this->config->get('payment_todopago_cart') == 1) {
-                    $this->load->language('checkout/cart');
-                    $this->cart->clear();
-                    unset($this->session->data['vouchers']);
-                    unset($this->session->data['shipping_method']);
-                    unset($this->session->data['shipping_methods']);
-                    unset($this->session->data['payment_method']);
-                    unset($this->session->data['payment_methods']);
-                    unset($this->session->data['reward']);
-                }
+                $this->openCartCleanCart();
 
                 if ($this->config->get('payment_todopago_formulario') == "hibrid") {
-                    $rta_first_step["URL_ErrorPageHybrid"] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rta_first_step['StatusMessage'];
-                    return json_encode($rta_first_step);
+                    $rtaFirstStep["URL_ErrorPageHybrid"] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rtaFirstStep['StatusMessage'];
+                    return json_encode($rtaFirstStep);
                 } else {
-                    $this->response->redirect($this->config->get('config_url') . "index.php?route=" . "extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rta_first_step['StatusMessage']);
+                    $this->response->redirect($this->config->get('config_url') . "index.php?route=" . "extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rtaFirstStep['StatusMessage']);
                 }
-
             } else {
                 #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_rech'), "TODO PAGO: " . $rta_first_step['StatusMessage']);
-                $this->addRecordHistory($rta_first_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_rech'));
-
-                if ($this->config->get('payment_todopago_cart') == 1) {
-                    $this->load->language('checkout/cart');
-                    $this->cart->clear();
-
-                    unset($this->session->data['vouchers']);
-                    unset($this->session->data['shipping_method']);
-                    unset($this->session->data['shipping_methods']);
-                    unset($this->session->data['payment_method']);
-                    unset($this->session->data['payment_methods']);
-                    unset($this->session->data['reward']);
-                }
-
+                $this->addRecordHistory($rtaFirstStep['StatusMessage'], $this->config->get('payment_todopago_order_status_id_rech'));
+                $this->openCartCleanCart();
                 if ($this->config->get('payment_todopago_formulario') == "hibrid") {
                     //En caso de que sea formulario hibrido
-                    $rta_first_step["URL_ErrorPageHybrid"] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rta_first_step['StatusMessage'];
-                    return json_encode($rta_first_step);
+                    $rtaFirstStep["URL_ErrorPageHybrid"] = $this->config->get('config_url') . "index.php?route=extension/payment/todopago/url_error&Order=" . $this->order_id . "&Message=" . $rtaFirstStep['StatusMessage'];
+                    return json_encode($rtaFirstStep);
                 } else {
                     $this->response->redirect($this->config->get('config_url') . "index.php?route=" . "extension/payment/todopago/url_error&Order=" . $this->order_id);
                 }
@@ -364,10 +354,14 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    public function second_step_todopago()
+    public function second_step_todopago($order = null)
     {
-        $this->order_id = $_GET['Order'];
-
+        if (key_exists('Order', $_GET))
+            $this->order_id = $_GET['Order'];
+        elseif ($order)
+            $this->order_id = $order;
+        else
+            $this->logger->error("Hubo un error al realizar el second step. No hay order ID");
         if (isset($_GET['Answer'])) {
             $answer = $_GET['Answer'];
 
@@ -384,7 +378,7 @@ class ControllerExtensionPaymentTodopago extends Controller
                 $mode = ($this->get_mode() == "test") ? "test" : "prod";
                 $this->load->model('checkout/order');
                 $requestKey = $this->model_extension_todopago_transaccion->getRequestKey($this->order_id);
-                $this->logger->debug('Request Key: ' . $requestKey);
+                // $this->logger->debug('Request Key: ' . $requestKey);
                 $optionsAnswer = array(
                     'Security' => $this->get_security_code(),
                     'Merchant' => $this->get_id_site(),
@@ -432,21 +426,21 @@ class ControllerExtensionPaymentTodopago extends Controller
         $rta_second_step = $connector->getAuthorizeAnswer($optionsAnswer);
         $this->logger->info("response GAA: " . json_encode($rta_second_step));
         $query = $this->model_extension_todopago_transaccion->recordSecondStep($this->order_id, $optionsAnswer, $rta_second_step);
-        $this->logger->debug("query recordSecondStep(): " . $query);
+        // $this->logger->debug("query recordSecondStep(): " . $query);
 
         if (strlen($rta_second_step['Payload']['Answer']["BARCODE"]) > 0) {
             $this->showCoupon($rta_second_step);
         }
 
         if ($rta_second_step['StatusCode'] == -1) {
-            $this->logger->debug('status code: ' . $rta_second_step['StatusCode']);
+            // $this->logger->debug('status code: ' . $rta_second_step['StatusCode']);
 
             #$this->model_checkout_order->addOrderHistory($this->order_id, $this->config->get('payment_todopago_order_status_id_aprov'), "TODO PAGO: " . $rta_second_step['StatusMessage']);
             $this->addRecordHistory('TODO PAGO: ' . $rta_second_step['StatusMessage'], $this->config->get('payment_todopago_order_status_id_aprov'));
 
             // Cambio por Costo Financiero Total
             if (array_key_exists("AMOUNTBUYER", $rta_second_step['Payload']['Request'])) {
-                $this->logger->debug('Commission ->  AMOUNTBUYER = ' . $rta_second_step['Payload']['Request']['AMOUNTBUYER'] . ' - AMOUNT = ' . $rta_second_step['Payload']['Request']['AMOUNT']);
+                // $this->logger->debug('Commission ->  AMOUNTBUYER = ' . $rta_second_step['Payload']['Request']['AMOUNTBUYER'] . ' - AMOUNT = ' . $rta_second_step['Payload']['Request']['AMOUNT']);
                 $this->model_extension_todopago_transaccion->saveCostoFinancieroTotal($this->order_id, $rta_second_step['Payload']['Request']['AMOUNTBUYER']);
             }
 
@@ -487,7 +481,16 @@ class ControllerExtensionPaymentTodopago extends Controller
     public function url_error()
     {
         $data['order_id'] = $_GET['Order'];
-        if (key_exists('Message', $_GET) && $_GET['Message'] != null && $_GET['Message'] != '') {
+        $this->logger->debug($_GET);
+        if (key_exists('Message', $_GET) && $_GET['Message'] !== null && $_GET['Message'] !== '') {
+            try {
+                $recordHistory = $this->addRecordHistory("TODO PAGO (Exception): " . $_GET['Message'], $this->config->get('payment_todopago_order_status_id_rech'));
+            } catch (Exception $e) {
+                $this->logger->error($e);
+            }
+            if ($recordHistory) {
+                $this->logger->error($recordHistory);
+            }
             $this->document->setTitle("Fallo en el Pago");
             $this->template = 'extension/todopago/todopago_fail';
             // define children templates

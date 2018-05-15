@@ -44,12 +44,12 @@ class ControllerExtensionPaymentTodopago extends Controller
         //Upgrade verification
         $installedVersion = $this->getVersion();
 
-        $this->logger->debug("version instalada: " . $installedVersion);
-        $this->logger->debug("Versión a instalar: " . TP_VERSION);
+        $this->logger->info("version instalada: " . $installedVersion);
+        $this->logger->info("Versión a instalar: " . TP_VERSION);
         $data['installed_todopago_version'] = $installedVersion;
         $data['need_upgrade'] = (TP_VERSION > $installedVersion) ? true : false;
         // campo preparado para github
-        $data['need_update'] = false;
+        $data['need_update'] = $this->checkNewVersion();
         $data['payment_todopago_version'] = $installedVersion;
         $data['entry_text_config_two'] = $this->language->get('text_config_two');
         $data['action'] = $this->url->link('extension/payment/todopago', 'user_token=' . $this->session->data['user_token'], true);
@@ -312,6 +312,28 @@ class ControllerExtensionPaymentTodopago extends Controller
         */
     }
 
+
+    private function checkNewVersion()
+    {
+        $this->load->model('extension/todopago/github_admin');
+        $get = $this->model_extension_todopago_github_admin->getReleases();
+        $githubResponse = json_decode($get);
+        $githubVersion = $this->getVersion();
+        if (is_object($githubResponse) && property_exists($githubResponse, 'tag_name')) {
+            $githubVersion = str_replace('V', '', $githubResponse->tag_name);
+        } elseif ($get === 501) {
+            $this->logger->error("Error al conectarse con github. Revise su configuración de cURL");
+            return false;
+        } else {
+            $this->logger->error("Error al conectarse con github\n" . $get);
+        }
+        if (version_compare(TP_VERSION, $githubVersion) == -1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private function do_install($plugin_version = null)
     {
         /*******************************************************************
@@ -319,7 +341,7 @@ class ControllerExtensionPaymentTodopago extends Controller
          *TODAS LAS VERSIONES DEBEN APARECER,                               *
          *de lo contrario LA VERSION QUE NO APAREZCA NO PODRÁ UPGRADEARSE   *
          *******************************************************************/
-        $this->logger->debug("PLUGIN VERSION:" . $plugin_version);
+        $this->logger->info("PLUGIN VERSION:" . $plugin_version);
         if (is_null($plugin_version))
             $plugin_version = '0.0.0';
         $settings = $this->model_setting_setting->getSetting('payment_todopago');
@@ -334,6 +356,8 @@ class ControllerExtensionPaymentTodopago extends Controller
                 $this->logger->info("\nUpgrade to v1.0.1 Changelog:\n-Fix estado orden");
             case '1.1.0':
                 $this->logger->info("\nUpgrade to v1.1.0 Changelog:\n-Campos de versión");
+            case '1.2.0':
+                $this->logger->info("\nUpgrade to v1.2.0 Changelog:\n-Formulario Híbrido 2\n-Update Check\n-Fix Update");
         }
         if (isset($statusCode) && $statusCode !== 200) {
             return 'Error;';
@@ -401,7 +425,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         } else {
             $this->session->data['success'] = 'Upgraded.';
         }
-        if ($metodo = 'upgrade'){
+        if ($metodo = 'upgrade') {
             $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
         }
     }
@@ -572,16 +596,16 @@ class ControllerExtensionPaymentTodopago extends Controller
         $order_id = $_GET['order_id'];
         $this->load->model('extension/todopago/transaccion');
         $transaction = $this->model_extension_todopago_transaccion;
-        $this->logger->debug('todopago -  step: ' . $transaction->getStep($order_id));
+        # $this->logger->debug('todopago -  step: ' . $transaction->getStep($order_id));
         // if($transaction->getStep($order_id) == $transaction->getTransactionFinished()){
         $authorizationHTTP = $this->get_authorizationHTTP();
-        $this->logger->debug('Authorization HTTP: ' . json_encode($authorizationHTTP));
+        # $this->logger->debug('Authorization HTTP: ' . json_encode($authorizationHTTP));
         $mode = $this->get_mode();
-        $this->logger->debug('Mode: ' . $mode);
+        # $this->logger->debug('Mode: ' . $mode);
         try {
             $connector = new TodoPago\Sdk($authorizationHTTP, $mode);
             $optionsGS = array('MERCHANT' => $this->get_id_site(), 'OPERATIONID' => $order_id);
-            $this->logger->debug('Options GetStatus: ' . json_encode($optionsGS));
+            # $this->logger->debug('Options GetStatus: ' . json_encode($optionsGS));
             $status = $connector->getStatus($optionsGS);
             $status_json = json_encode($status);
             $this->logger->info("GETSTATUS: " . $status_json);
@@ -589,7 +613,7 @@ class ControllerExtensionPaymentTodopago extends Controller
             if ($status) {
                 if (isset($status['Operations']) && is_array($status['Operations'])) {
                     $status3 = json_encode($status['Operations']);
-                    $status2 = json_decode($status3,TRUE);
+                    $status2 = json_decode($status3, TRUE);
                     $rta .= $this->printGetStatus($status2);
                 } else {
                     $rta = 'No hay operaciones para esta orden.';
@@ -609,12 +633,13 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     }
 
-    private function printGetStatus($array, $indent = 0) {
+    private function printGetStatus($array, $indent = 0)
+    {
         $rta = '';
 
         foreach ($array as $key => $value) {
             if ($key !== 'nil' && $key !== "@attributes") {
-                if (is_array($value) ){
+                if (is_array($value)) {
                     $rta .= str_repeat("-", $indent) . "$key: <br/>";
                     $rta .= $this->printGetStatus($value, $indent + 2);
                 } else {

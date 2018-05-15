@@ -1,6 +1,6 @@
 <a name="inicio"></a>
 # OpenCart 3
-### Versión 1.1.0
+### Versión 1.2.0
 
 
 Plug in para la integración con gateway de pago <strong>Todo Pago</strong>
@@ -37,12 +37,7 @@ Por requerimientos del medio de pago el plugin configurará un código postal co
 ![imagen de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/README.img/opencart2_configuracion.PNG)
 
 Observación:
-Descomentar: <em>extension=php_soap.dll</em> del php.ini, ya que para la conexión al gateway se utiliza la clase <em>SoapClient</em> del API de PHP.
-
-[<sub>Volver a inicio</sub>](#inicio)
-
-Observación:
-Descomentar: <em>extension=php_soap.dll</em> del php.ini, ya que para la conexión al gateway se utiliza la clase <em>SoapClient</em> del API de PHP.
+Descomentar: <em>extension=php_soap.dll</em> (y extension=php_mbstring en caso de ser necesario) del php.ini, ya que para la conexión al gateway se utiliza la clase <em>SoapClient</em> del API de PHP.
 
 [<sub>Volver a inicio</sub>](#inicio)
 
@@ -85,9 +80,9 @@ Se puede configurar la cantidad máxima de cuotas que ofrecerá el formulario de
 Se incluyen dos tipos de formularios de pago, redirección y Formulario Híbrido (embebido en el e commerce). Para utilizar este último se debe seleccionar Híbrido en la configuración general del Plugin. 
 ![imagen de solapas de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart3/oc3-config-formulario.png)
 El formulario seleccionado se mostrara en la etapa final del proceso de pago "Confirmar pago".
-![imagen de solapas de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart3/oc3-form-hibrido.png)
+![imagen de solapas de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart3/oc3-form-hibrido2.png)
 Existen dos formas de pago, ingresando los datos de una tarjeta o utilizando la billetera de Todopago. Al ir a "Pagar con Billetera" desplegara una ventana que permitira ingresar a billetera y realizar el pago.
-![imagen de solapas de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart3/oc3-billetera.png)
+![imagen de solapas de configuracion](https://raw.githubusercontent.com/TodoPago/imagenes/master/opencart3/oc3-billetera-2.png)
 
 <a name="googlemaps"></a>
 #### Google Maps

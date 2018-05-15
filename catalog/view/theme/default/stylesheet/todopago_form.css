@@ -1,4 +1,49 @@
-/* Hoja de estilo del formulario híbrido */
+/*-------------------------------------*/
+/*GENERAL CONFIGURATION*/
+/*-------------------------------------*/
+.tp_wrapper {
+    outline: 0;
+    font-size: 100%;
+    color: #909090;
+}
+
+@font-face {
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Lato Regular'), local('Lato-Regular'), url(./../template/extension/todopago/lato-regular.ttf) format('ttf');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:-ms-input-placeholder {
+    font-family: Lato, Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif !important;
+}
+
+::-moz-placeholder, ::-webkit-input-placeholder, ::placeholder {
+    font-family: Lato, Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif !important;
+}
+
+html, body, button, input, select {
+    font-family: Lato, Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif !important;
+}
+
+body {
+    line-height: normal;
+}
+
+#tpform input, select {
+    height: 35px;
+    max-height: 35px;
+    border-radius: 4px
+}
+
+/*
+#tpForm > select {
+    height: 35px;
+    max-height: 35px;
+    border-radius: 4px
+}
+*/
 @keyframes barFill {
     0% {
         width: 0;
@@ -8,68 +53,437 @@
     }
 }
 
-#peiCbx {
+.tp_wrapper {
+    outline: 0;
+    font-size: 14px;
+    color: #909090;
+    width: 90%;
+    margin: auto
+}
+
+/*-------------------------------------*/
+/*GRID CONFIGURATION*/
+/*-------------------------------------*/
+
+.tp_col {
+    overflow-x: hidden;
+}
+
+.section-fantasma {
     opacity: 0;
+    height: 0 !important;
 }
 
-.formuHibrido button {
-    margin: 5px;
+
+/*-------------------------------------*/
+/*REUSABLE COMPONENTS*/
+/*-------------------------------------*/
+.tp_btn:link,
+.tp_btn:hover {
+    color: #fff;
 }
 
-#contenedorFormulario {
-    display: none
+.tp_btn {
+    width: 75%;
+    padding: 7px 40px;
+    font-weight: bold;
+    border: 0;
+    border-radius: 4px;
+    background-color: #EA3297;
+    color: #fff;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    margin: 0 0 0 12%;
 }
 
-.warning {
-    color: red;
-    padding: 1px;
+.tp_btn:hover {
+    background-color: #ee0075;
+    color: #fff;
 }
 
-.fail {
-    background-color: lightpink;
-    border-color: red;
+.tp_btn .tp_btn_sm {
+    width: 70%;
 }
 
-.row {
-    min-height: 60px
-}
-
-.input {
+.tp_btn .tp_btn_lg {
     width: 100%;
 }
 
-.modal-class {
+section {
+    margin-bottom: 20px;
+    padding: 25px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    -webkit-box-shadow: 0 0 2px rgba(131, 121, 112, 0.4);
+    box-shadow: 0 0 2px rgba(131, 121, 112, 0.4);
 }
 
-.modal-content {
+.tp_color_text {
+    color: #EA3297;
 }
 
-#todopago_logo {
-    width: 110px;
+.tp_color_text:hover {
+    color: red;
+}
+
+.element_invisible {
+    overflow: hidden;
+    visibility: hidden;
+    height: 1px;
+    position: absolute;
+}
+
+h1 {
+    font-size: 140%;
+}
+
+.text_small {
+    display: inline-block;
+    float: left;
+    font-size: 10px !important;
+    margin-bottom: 6px;
+}
+
+h3 {
+    font-size: 17px;
+}
+
+/* ELEMENTOS */
+
+/** TOTAL **/
+
+.tp-total {
+    border: none;
+    flex-direction: column;
+    align-content: space-around;
+    border-radius: 0;
+    font-size: 18px;
+    color: #ffffff;
+    text-align: center;
+    background-color: #c1c1c1;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.tp-total div {
+    margin: auto;
+}
+
+/** CVV HELPER **/
+
+/** CVV HELPER **/
+
+.clave-ico {
+    background: transparent url(../image/todopago/clave-ico.png) no-repeat top center;
+    border: 0;
+    text-indent: -999em;
+    width: 20px;
+    height: 20px;
+    display: block;
+    margin-top: 7px;
+    margin-left: auto;
+    outline: none;
+    box-shadow: none
+}
+
+.tp-anexo {
+    z-index: 1000;
+
+}
+
+.tp-cvv-helper-container {
+    display: none;
+    width: 100%;
+    justify-content: right;
     height: 40px;
-    margin: 5px 5px;
+    flex: 0;
+}
+
+#tp-cvv-caller {
+    position: absolute;
+    transform: translateX(-100%);
+}
+
+#tp-cvv-helper {
+    display: none;
+    margin-top: 20px;
+    margin-right: 20px;
+    flex-direction: column;
+    background: white;
+    border-radius: 4px 0 4px 4px;
+    border: gray;
+    box-shadow: 1px 1px 3px 1px #3A3A3A;
+    z-index: 1000;
+    position: absolute;
+    max-width: 300px;
+    padding: 5px;
+}
+
+#tp-cvv-helper-img {
+    float: left;
+}
+
+
+/*-------------------------------------*/
+/*POPOVER*/
+/*-------------------------------------*/
+
+.popover {
+    min-width: 285px;
+}
+
+.tp-title-right > label {
+    float: right;
+}
+
+.tp-title {
+    height: 20px;
+    max-height: 20px;
+}
+
+.billetera_virtual_tp,
+.billetera_tp,
+.billeterafm_tp {
+    border: 1px solid #c4c4c44d;
+}
+
+.billeterafm_tp {
+    display: none;
+}
+
+.tp-error {
+    font-size: 11px;
+    margin-top: 3px;
+    color: #EA3297;
+    line-height: 1;
+}
+
+.tp-error-title {
+    min-height: 20px;
+    max-height: 20px;
+}
+
+.tp-input-row {
+    max-height: 40px;
+}
+
+#promosLbl {
+    font-size: 25px;
+    margin: 13px 0 0 6px;
+    font-weight: normal;
+}
+
+#promosLbl br {
+    display: none;
 }
 
 #tpForm {
     display: none;
+    width: 90%;
+    margin-left: 5%;
 }
 
-.loaded-form {
+.payment-method {
     display: none;
 }
 
-#loading-hibrid {
-    width: 0;
+button {
+    cursor: pointer !important;
 }
 
-.barFiller {
-    animation-name: barFill;
-    animation-duration: 1s;
-    animation-fill-mode: forwards;
-    animation-iteration-count: 5;
+p {
+    margin-bottom: 0.2em !important;
 }
 
+.tp-flex {
+    display: flex;
+}
+
+.tp-center {
+    align-content: center;
+    justify-content: center;
+}
+
+#tp-tarjeta-logo {
+    display: none;
+    width: 30px;
+    transform: translateY(-120%);
+    margin-left: 230px;
+    position: absolute
+}
+
+#tp-powered {
+    display: flex;
+    height: 40px !important;
+    float: right;
+}
+
+#tp-powered img {
+    margin: 0 0 0 5px;
+    height: 30px !important;
+}
+
+.text_small {
+    text-transform: uppercase;
+}
+
+/*-------------------------------------*/
+/*FORMS*/
+/*-------------------------------------*/
+.tp_form_control {
+    margin-bottom: 5px;
+    display: inline-block;
+    width: 100%;
+    height: 35px;
+    max-height: 35px;
+    border-radius: 4px
+}
+
+.text_centered {
+    text-align: center;
+    text-transform: uppercase;
+}
+
+input.tp_form_control {
+    border: 0;
+    border-bottom: 1px solid #c4c4c4;
+    color: #909090;
+}
+
+input[type=text].tp_form_control,
+input[type=email].tp_form_control,
+input[type=password].tp_form_control,
+select.tp_form_control {
+    background-color: #fff;
+    padding: 0 3%;
+    border: 0px solid #000;
+    border-bottom: 1px solid #c4c4c4;
+    color: #909090;
+}
+
+input:focus {
+    box-shadow: 0 0 4px 1px #EA3297;
+}
+
+select:disabled {
+    background-color: #eeeeee;
+}
+
+.med_width {
+    width: 50%;
+}
+
+.full_width {
+    width: 100%;
+}
+
+#formaPagoCbx {
+    display: none;
+}
+
+label {
+    color: #909090;
+}
+
+#tp-dni-numero {
+}
+
+#codigoSeguridadTxt::placeholder {
+    font-size: 12px;
+}
+
+/*pei box*/
+#row-pei {
+    display: flex;
+    flex-grow: 2;
+    min-width: 50%;
+    padding: 10px;
+    justify-content: center;
+    align-content: center;
+    border: 1px solid #c4c4c4;
+    color: #555369;
+    background-color: #eee;
+}
+
+#row-pei p {
+    font-size: 9px !important;
+}
+
+#row-pei strong {
+    font-size: 10px !important;
+}
+
+#codigoSeguridadTitulo {
+
+}
+
+#peiLbl strong {
+    text-transform: uppercase;
+    margin: 0 0 0 15px;
+}
+
+#peiLbl p {
+    text-transform: uppercase;
+    margin: 4px 0 0 15px;
+    border-top: 1px solid #000;
+}
+
+#peiCbx {
+    margin: 0 0 0 22px;
+    opacity: 0;
+}
+
+#pei-container {
+    flex-direction: column;
+    width: 40%;
+    margin-left: 30px;
+}
+
+#tokenPeiLbl, #tokenPeiLbl {
+    text-transform: uppercase
+}
+
+#tokenPeiTxt {
+    min-height: 30px;
+    width: 60%;
+    font-size: 14px
+}
+
+#tokenPeiTxt::placeholder {
+    font-size: 14px
+}
+
+.payment-method {
+    display: none;
+}
+
+.billeterafm_tp {
+    display: none;
+    border: 1px solid #c4c4c4;
+}
+
+.tp-flex {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+}
+
+#tp-powered {
+    display: flex;
+    height: 40px !important;
+    float: right;
+}
+
+#tp-powered img {
+    margin: 0 0 0 5px;
+    height: 30px !important;
+}
+
+/*-------------------------------------*/
+/*SWITCH*/
 /* The switch - the box around the slider */
+/*-------------------------------------*/
 .switch {
     position: relative;
     display: inline-block;
@@ -82,6 +496,40 @@
     display: none;
 }
 
+/*-------------------------------------*/
+/*THE SLIDER*/
+/* The switch - the box around the slider */
+/* Hide default HTML checkbox */
+/*-------------------------------------*/
+
+#slider-text {
+    transition: all cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+    width: 60%;
+    height: 100%;
+    position: absolute;
+    padding: 4px;
+    font-size: 12px;
+    left: 0;
+    color: white;
+}
+
+.switch {
+    margin: 16px 26px 0 0;
+    float: right;
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 25px;
+}
+
+.switch input {
+    display: none;
+}
+
+.switch:target:before {
+    left: 32px;
+}
+
 /* The slider */
 .slider {
     position: absolute;
@@ -90,25 +538,42 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #adadad;
     -webkit-transition: .4s;
     transition: .4s;
+    overflow: hidden;
+    outline: none;
+    display: inline-block;
 }
 
 .slider:before {
+    color: white;
+    text-indent: -22px;
+    font-size: 14px;
     position: absolute;
     content: "";
-    height: 20px;
-    width: 20px;
-    left: 2px;
-    bottom: 2px;
+    height: 18px;
+    width: 18px;
+    left: 4px;
+    bottom: 4px;
     background-color: white;
     -webkit-transition: .4s;
-    transition: .4s;
+    transition: all cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+    white-space: nowrap;
+    word-spacing: 1px;
+    display: block
+}
+
+.slider:checked:before {
+    left: 32px;
+}
+
+input::placeholder {
+    color: lightgray !important;
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background-color: #e6007e;
 }
 
 input:focus + .slider {
@@ -123,9 +588,22 @@ input:checked + .slider:before {
 
 /* Rounded sliders */
 .slider.round {
-    border-radius: 24px;
+    border-radius: 34px;
 }
 
 .slider.round:before {
     border-radius: 50%;
+}
+
+.tp_oculto {
+    display: none;
+}
+
+.tp_pei {
+    height: 115px;
+}
+
+
+#tp-ammount {
+
 }

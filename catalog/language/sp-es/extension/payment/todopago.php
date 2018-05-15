@@ -1,5 +1,5 @@
 <?php
-$_['text_title'] = '<img src="/catalog/view/theme/default/image/todopago.jpg" />';
+$_['text_title'] = '<img src="https://todopago.com.ar/sites/todopago.com.ar/files/pluginstarjeta.jpg" />';
 
 
 $_['button_continue'] = 'Continue';

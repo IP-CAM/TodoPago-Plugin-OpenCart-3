@@ -1,5 +1,5 @@
 <?php
-$_['text_title'] = '<img src="catalog/view/theme/default/image/todopago.jpg" style="height:30px; width:200px" alt="Todo Pago" title="Todo Pago" /></a>';
+$_['text_title'] = '<img src="https://todopago.com.ar/sites/todopago.com.ar/files/pluginstarjeta.jpg" style="height:30px; width:200px" alt="Todo Pago" title="Todo Pago" /></a>';
 // Button
 
 // Entry

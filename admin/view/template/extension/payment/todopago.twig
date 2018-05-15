@@ -30,6 +30,13 @@
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
         {% endif %}
+        {% if need_update == true %}
+            <div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i>
+                Se encuentra disponible una versión más reciente del plugin de Todo Pago, puede consultarla desde <a
+                        href="https://github.com/TodoPago/Plugin-OpenCart3" target="_blank"><i
+                            class="fa fa-github"></i>aquí</a>
+            </div>
+        {% endif %}
         {% if error.error_warning is not null %}
             <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>
                 {{ error.error_warning }}
@@ -478,10 +485,8 @@
                                             tabla_db += "<th><a onclick='devolver(" + value.order_id + ")' style='cursor:pointer'>Devolver</a></th>";
                                             tabla_db += "</tr>";
                                         });
-
                                         $("#tabla_db").prepend(tabla_db);
                                         $('#tabla').dataTable();
-
                                     });
 
                                     function verstatus(order) {
@@ -503,9 +508,7 @@
                                         });
                                         modal.setContent(datos);
                                         modal.open();
-
                                     }
-
                                 </script>
                                 <link rel="stylesheet"
                                       href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.css">
@@ -553,7 +556,7 @@
 <!--Devoluciones-->
 <script type="text/javascript">
     function devolver(order_id) {
-        var monto = prompt("Monto a parcial devolver (valor real del producto, sin el costo adicional) o vacío para devolución total (ej: 1.23): ", "");
+        var monto = prompt("Monto parcial a devolver (valor real del producto, sin el costo adicional) o vacío para devolución total (ej: 1.23): ", "");
         if (monto !== null) {
             $('#content').css('cursor', 'progress');
             var url_devolver = '{{ url_devolver }}';

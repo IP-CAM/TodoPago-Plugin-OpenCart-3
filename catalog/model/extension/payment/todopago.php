@@ -106,7 +106,7 @@ class ModelExtensionPaymentTodopago extends Model
 
     public function editPaymentMethodOrder($order_id)
     {
-        $query = "UPDATE `" . DB_PREFIX . "order` SET payment_method='<img src=view/image/payment/todopago.jpg>' WHERE order_id=" . $order_id . ";";
+        $query = "UPDATE `" . DB_PREFIX . "order` SET payment_method='<img src=" . '"' . "https://todopago.com.ar/sites/todopago.com.ar/files/pluginstarjeta.jpg" . '" style="width: 220px;"' . ">' WHERE order_id=" . $order_id . ";";
         return $this->db->query($query);
     }
 
