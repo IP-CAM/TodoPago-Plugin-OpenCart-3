@@ -4,6 +4,8 @@ require_once DIR_APPLICATION . '../system/library/todopago/todopago_ctes.php';
 
 class ModelExtensionPaymentTodopago extends Model
 {
+    protected $settingTable = DB_PREFIX . "setting";
+
 
     public function __construct($registry)
     {
@@ -15,7 +17,24 @@ class ModelExtensionPaymentTodopago extends Model
     {
 
         $get_orders = $this->db->query("SELECT order_id, date_added ,store_name, firstname, lastname, total  FROM `" . DB_PREFIX . "order` WHERE order_status_id<>0 AND payment_code='todopago';");
+
         return $get_orders;
+    }
+
+    public function injectBilletera()
+    {
+        $this->load->model('setting/extension');
+        try {
+
+            $this->model_setting_extension->install('payment', 'todopagobilletera');
+        } catch (Exception $e) {
+            $error = "Hubo un  problema $e al insertar en la base de datos";
+        }
+        if (isset ($error)) {
+            return 500;
+        } else {
+            return 200;
+        }
     }
 
     public function setProvincesCode()
@@ -52,23 +71,33 @@ class ModelExtensionPaymentTodopago extends Model
         $this->db->query("UPDATE `" . DB_PREFIX . "zone` SET cs_code = 'S' WHERE code = 'SF';");
         $this->db->query("UPDATE `" . DB_PREFIX . "zone` SET cs_code = 'G' WHERE code = 'SD';");
         $this->db->query("UPDATE `" . DB_PREFIX . "zone` SET cs_code = 'T' WHERE code = 'TU';");
-        if (isset($error))
+        if (isset($error)) {
             return $error;
-        else
+        } else {
             return 200;
+        }
     }
 
     public function unsetProvincesCode()
     {
-        try{
+        try {
+            $cs_codeColumn = $this->db->query("SHOW COLUMNS FROM `" . DB_PREFIX . "zone` LIKE 'cs_code'");
+        } catch (Exception $e) {
+            $error = "Hubo un problema: " . $e . "al leer la base de datos";
+        }
+        if ($cs_codeColumn->num_rows < 1) {
+            return 200;
+        }
+        try {
             $this->db->query("ALTER TABLE `" . DB_PREFIX . "zone` DROP COLUMN cs_code;");
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $error = "No se pudo pudieron borrar los códigos de ciudad. Error: " . $e;
         }
-        if (isset($error))
+        if (isset($error)) {
             return $error;
-        else
+        } else {
             return 200;
+        }
     }
 
     public function setPostCodeRequired($required = true)
@@ -78,10 +107,11 @@ class ModelExtensionPaymentTodopago extends Model
         } catch (Exception $e) {
             $error = "No pudo setearse el código postal requerido. Error: " . $e;
         }
-        if (isset($error))
+        if (isset($error)) {
             return $error;
-        else
+        } else {
             return 200;
+        }
     }
 }
 

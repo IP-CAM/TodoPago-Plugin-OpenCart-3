@@ -14,13 +14,13 @@
 </div>
 
 <script type="text/javascript">
-    var action = '{{ action }}';
-    var orderId = '{{ order_id }}';
+    let action = '{{ action }}';
+    let orderId = '{{ order_id }}';
 
     /************* FIRST STEP *********************/
 
     function parseAnswerSAR(data) {
-        var response;
+        let response;
         try {
             response = JSON.parse(data);
         } catch (e) {
@@ -31,8 +31,8 @@
     }
 
     function sliceAnswerSAR(data) {
-        var pos = data.indexOf('{');
-        var response = data.slice(pos);
+        let pos = data.indexOf('{');
+        let response = data.slice(pos);
         response = parseAnswerSAR(response);
         if (response === false) {
             failed(504);
@@ -41,6 +41,7 @@
         }
     }
 
+
     function initForm() {
         console.log("init form");
         $("#comenzar-pago-btn").text("Loading...").prop('disabled', true);
@@ -48,15 +49,15 @@
             .done(function (data) {
                 console.log("Datos obtenidos", data);
                 loadScript('{{ validacionJS }}', function () {
-                    var response = parseAnswerSAR(data);
+                    let response = parseAnswerSAR(data);
                     if (response === false) {
                         response = sliceAnswerSAR(data);
                     }
                     if (response.StatusCode === 702) {
                         failed(503, response.StatusMessage);
                     }
-                    var publicRequestKey = response.PublicRequestKey;
-                    var errorPageHybrid = response.URL_ErrorPageHybrid;
+                    let publicRequestKey = response.PublicRequestKey;
+                    let errorPageHybrid = response.URL_ErrorPageHybrid;
                     if (publicRequestKey) {
                         $("#contenedor-formulario").show('slow');
                         $("#tp-form").fadeIn('fast');
@@ -77,7 +78,7 @@
     }
 
     function failed(statusCode, message, url) {
-        var tpForm = $('#tp-form');
+        let tpForm = $('#tp-form');
         switch (statusCode) {
             case 504:
                 tpForm.css("opacity", 0);
@@ -113,6 +114,7 @@
 
 <div class="tp_wrapper" id="tpForm">
 
+
     <section class="tp-total tp-flex">
         <div>
             <strong id="tp-ammount">Total a pagar ${{ amount }}</strong>
@@ -123,7 +125,7 @@
     </section>
 
     <section class="billetera_virtual_tp tp-flex tp-flex-responsible">
-        <div class="tp-flex-grow-1 tp-bloque-span texto_billetera_virtual text_size_billetera">
+        <div class="tp-flex-grow-1 tp-bloque-span texto_billetera_virtual text_size_billetera" style="text-align:  center;">
             <p>Pagá con tu <strong>Billetera Virtual Todo Pago</strong></p>
             <p>y evitá cargar los datos de tu tarjeta</p>
         </div>
@@ -143,16 +145,16 @@
         </div>
     </section>
 
-    <section class="billetera_tp">
+    <section class="todopago" id="todopago-section">
         <div class="tp-row">
             <h3>
-                Con tu tarjeta de cr&eacute;dito o d&eacute;bito
+                Con tu tarjeta de crédito o débito
             </h3>
         </div>
         <!-- Número de tarjeta y banco -->
         <div class="tp-bloque-full tp-flex tp-flex-responsible tp-main-col">
             <!-- tarjeta -->
-            <div class="tp-flex-grow-1">
+            <div class="tp-flex-grow-1" style="width: 100%;">
                 <label for="numeroTarjetaTxt" class="text_small">Número de Tarjeta</label>
                 <input id="numeroTarjetaTxt" class="tp_form_control" maxlength="19" title="Número de Tarjeta"
                        min-length="14" autocomplete="off">
@@ -220,7 +222,8 @@
                         <div class="clave-ico" id="tp-cvv-caller"></div>
                         <div id="tp-cvv-helper">
                             <p>
-                                Para Visa, Master, Cabal y Diners, los 3 dígitos se encuentran en el <strong>dorso</strong>
+                                Para Visa, Master, Cabal y Diners, los 3 dígitos se encuentran en el
+                                <strong>dorso</strong>
                                 de
                                 tu tarjeta. (izq)
                             </p>
@@ -299,7 +302,7 @@
         <!-- TOKEN PEI -->
         <div class="tp_row">
             <div class="tp_col tp_span_2_of_2 tp-flex tp-main-col" id="pei-container">
-                    <label id="tokenPeiLbl" for="tokenPeiTxt"></label>
+                <label id="tokenPeiLbl" for="tokenPeiTxt"></label>
                 <input id="tokenPeiTxt" class="tp_form_control"/>
                 <span class="tp-error" id="peiTokenTxtError"></span>
             </div>
@@ -312,10 +315,11 @@
             </div>
             <div class="tp_col tp_span_2_of_2">
                 <div class="text_centered">
-                    Al confirmar el pago acepto los <a href="https://www.todopago.com.ar/terminos-y-condiciones-comprador"
-                                                       target="_blank"
-                                                       title="Términos y Condiciones" id="tycId"
-                                                       class="tp_color_text">Términos y Condiciones</a> de Todo
+                    Al confirmar el pago acepto los <a
+                            href="https://www.todopago.com.ar/terminos-y-condiciones-comprador"
+                            target="_blank"
+                            title="Términos y Condiciones" id="tycId"
+                            class="tp_color_text">Términos y Condiciones</a> de Todo
                     Pago.
                 </div>
             </div>
@@ -332,18 +336,20 @@
 
 <script type="text/javascript">
 
-    var medioDePago = document.getElementById('medioPagoCbx');
-    var tarjetaLogo = document.getElementById('tp-tarjeta-logo');
-    var poweredLogo = document.getElementById('tp-powered-img');
-    var numeroTarjetaTxt = document.getElementById('numeroTarjetaTxt');
-    var poweredLogoUrl = "catalog/view/theme/default/image/todopago/";
-    var emptyImg = "catalog/view/theme/default/image/todopago/empty.png";
-    var peiCbx = $("#peiCbx");
-    var switchPei = $("#switch-pei");
-    var sliderText = $("#slider-text");
-    var helperCaller = $("#tp-cvv-caller");
-    var helperPopup = $("#tp-cvv-helper");
-    var idTarjetas = {
+    let medioDePago = document.getElementById('medioPagoCbx');
+    let tarjetaLogo = document.getElementById('tp-tarjeta-logo');
+    let poweredLogo = document.getElementById('tp-powered-img');
+    let todopagoSection = document.getElementById('todopago-section');
+    let numeroTarjetaTxt = document.getElementById('numeroTarjetaTxt');
+    let poweredLogoUrl = "catalog/view/theme/default/image/todopago/";
+    let emptyImg = "catalog/view/theme/default/image/todopago/empty.png";
+    let btnBilletera = document.getElementById('MY_btnPagarConBilletera');
+    let peiCbx = $("#peiCbx");
+    let switchPei = $("#switch-pei");
+    let sliderText = $("#slider-text");
+    let helperCaller = $("#tp-cvv-caller");
+    let helperPopup = $("#tp-cvv-helper");
+    let idTarjetas = {
         42: 'VISA',
         43: 'VISAD',
         1: 'AMEX',
@@ -353,9 +359,9 @@
         14: 'MC',
         15: 'MCD'
     };
+    let tipo = '{{ tipo }}';
 
-
-    var diccionarioTarjetas = {
+    let diccionarioTarjetas = {
         'VISA': 'VISA',
         'VISA DEBITO': 'VISAD',
         'AMEX': 'AMEX',
@@ -384,7 +390,7 @@
     }
 
     function cardImage(select) {
-        var tarjeta = idTarjetas[select.value];
+        let tarjeta = idTarjetas[select.value];
         if (tarjeta === undefined) {
             tarjeta = diccionarioTarjetas[select.textContent];
         }
@@ -396,9 +402,23 @@
 
     /************* CONFIGURACION DEL API *********************/
 
+    function hideForm() {
+        btnBilletera.innerText = "Iniciar Sesión";
+        if (tipo === 'billetera') {
+            todopagoSection.style.opacity = '0';
+            todopagoSection.style.height = '0px';
+        }
+    }
+
+    function openBilletera() {
+        if (tipo === 'billetera') {
+            btnBilletera.click();
+        }
+    }
+
     function loadScript(url, callback) {
-        var entorno = (url.indexOf('developers') === -1) ? 'prod' : 'developers';
-        var script = document.createElement("script");
+        let entorno = (url.indexOf('developers') === -1) ? 'prod' : 'developers';
+        let script = document.createElement("script");
         poweredLogo.src = poweredLogoUrl + 'tp_logo_' + entorno + '.png';
         script.type = "text/javascript";
         if (script.readyState) {  //IE
@@ -420,7 +440,7 @@
         document.getElementsByTagName("head")[0].appendChild(script);
     }
 
-    var formaDePago = document.getElementById("formaPagoCbx");
+    let formaDePago = document.getElementById("formaPagoCbx");
     formaDePago.addEventListener("click", function () {
         if (formaDePago.value === "1") {
             $(".loaded-form").show('fast');
@@ -436,7 +456,7 @@
         }
     }
 
-    var peiChk = $("#peiCbx");
+    let peiChk = $("#peiCbx");
 
 
     function getInitialPEIState() {
@@ -457,6 +477,7 @@
         }, 2500);
         setTimeout(function () {
             $("#tpForm").fadeTo('fast', 1);
+            openBilletera();
         }, 2700);
     }
 
@@ -513,6 +534,7 @@
             defaultMail: '{{ mail }}',
             defaultTipoDoc: 'DNI'
         });
+        hideForm();
     }
 
     /************ FUNCIONES CALLBACKS ************/
@@ -520,7 +542,7 @@
     function validationCollector(parametros) {
         console.log("Validando los datos");
         console.log(parametros.field + " -> " + parametros.error);
-        var input = parametros.field;
+        let input = parametros.field;
 
         if (input === 'numeroTarjetaTxt')
             $("#row-pei").css("display", "none");
@@ -567,11 +589,11 @@
 
     function stopLoading() {
         console.log('Stop loading...');
-        var peiCbx = $("#peiCbx");
-        var peiRow = $("#row-pei");
-        var tokenPeiRow = $("#tokenpei-row");
-        var tokenPeiTxt = $("#tokenPeiTxt");
-        var tokenPeiBloque = $("#tokenpei-bloque");
+        let peiCbx = $("#peiCbx");
+        let peiRow = $("#row-pei");
+        let tokenPeiRow = $("#tokenpei-row");
+        let tokenPeiTxt = $("#tokenPeiTxt");
+        let tokenPeiBloque = $("#tokenpei-bloque");
 
         if (peiCbx.css('display') !== 'none') {
             peiRow.css('display', 'flex');

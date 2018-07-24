@@ -4,6 +4,7 @@ require_once DIR_APPLICATION . 'controller/extension/todopago/vendor/autoload.ph
 require_once DIR_APPLICATION . 'controller/extension/todopago/ControlFraude/includes.php';
 require_once DIR_SYSTEM . 'library/todopago/Logger/loggerFactory.php';
 require_once DIR_SYSTEM . 'library/todopago/todopago_ctes.php';
+require_once DIR_APPLICATION . '../system/library/todopago/Billeterahelper.php';
 
 class ControllerExtensionPaymentTodopago extends Controller
 {
@@ -32,12 +33,18 @@ class ControllerExtensionPaymentTodopago extends Controller
         $this->logger->debug("session_data: " . json_encode($this->session->data));
         $this->logger->debug("order_info: " . json_encode($order_info));
         $this->template = 'extension/payment/todopago_form';
+        $this->load->model("extension/todopago/bannerbilletera");
+        $posicionElegida = $this->model_extension_todopago_bannerbilletera->getUrlBanner();
+        $billeteraBanner = new TodopagoBilleterahelper($posicionElegida);
         if ($order_info) {
             $data['order_id'] = $order_info['order_id'];
             $data['completeName'] = $order_info['payment_firstname'] . ' ' . $order_info['payment_lastname'];
             $data['mail'] = $order_info['email'];
             $this->model_extension_payment_todopago->editPaymentMethodOrder($data['order_id']);
         }
+        $soyBilletera = strpos(get_class($this), 'billetera');
+        $data['tipo'] =  $soyBilletera ? 'billetera' : 'todopago';
+        $data['banner'] = $soyBilletera ? $billeteraBanner->getBannerUrl($posicionElegida) : TP_TODOPAGO_BANNER;
         if (key_exists('formulario', $data) && $data["formulario"] != "hibrid")
             $this->template = 'extension/payment/todopago';
         # $this->logger->debug("data cuando entro en formulario hibrido: " . json_encode($data) . "\n" .  $this->template);
@@ -46,7 +53,7 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     //Construye un template para insertar en un body pre-existente
     /*
-    private function errorRedirect($errorMensaje)
+    protected function errorRedirect($errorMensaje)
     {
         $this->template = 'extension/todopago/todopago_inner_fail';
         $data['errorMessage'] = $errorMensaje;
@@ -120,7 +127,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function getPaydata()
+    protected function getPaydata()
     {
         $this->load->model('account/customer');
         $customer = $this->model_account_customer->getCustomer($this->order['customer_id']);
@@ -141,7 +148,7 @@ class ControllerExtensionPaymentTodopago extends Controller
 
     /** GMAPS VALIDACIÓN **/
     //Genera el HASH en base a los datos cargados por el usuario
-    private function SAR_hasher($paramsSAR, $tipoDeCompra)
+    protected function SAR_hasher($paramsSAR, $tipoDeCompra)
     {
         if ($tipoDeCompra === 'billing')
             $arrayCompra = array('CSBTSTREET1' => 1, 'CSBTSTATE' => 2, 'CSBTCITY' => 3, 'CSBTCOUNTRY' => 3, 'CSBTPOSTALCODE' => 5);
@@ -155,7 +162,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Instancia Google en caso de no encontrar la ubicación a cargar en la tabla
-    private function getGoogleMapsValidator($md5Billing, $md5Shipping)
+    protected function getGoogleMapsValidator($md5Billing, $md5Shipping)
     {
         if (empty($this->model_extension_todopago_addressbook->findMd5($md5Billing)->row) || empty($this->model_extension_todopago_addressbook->findMd5($md5Shipping)->row)) {
             return new TodoPago\Client\Google();
@@ -164,7 +171,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Recupera la información desde la base de datos
-    private function getAddressbookData($operationData, $md5Billing, $md5Shipping) //rellena los datos de la operación con la info almacenada en nuestra agenda
+    protected function getAddressbookData($operationData, $md5Billing, $md5Shipping) //rellena los datos de la operación con la info almacenada en nuestra agenda
     {
         $arrayBilling = $this->model_extension_todopago_addressbook->getData($md5Billing);
         $arrayShipping = $this->model_extension_todopago_addressbook->getData($md5Shipping);
@@ -186,7 +193,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Guarda en la base de datos
-    private function setAddressBookData($gResponse, $originalData, $md5Billing, $md5Shipping)
+    protected function setAddressBookData($gResponse, $originalData, $md5Billing, $md5Shipping)
     {
         $originalBilling = array_intersect_key($originalData, $this->requiredDataBuilder('B'));
         $originalShipping = array_intersect_key($originalData, $this->requiredDataBuilder('S'));
@@ -199,7 +206,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Comprueba que Google haya devuelo la información correcta
-    private function googleResponseValidator($gFinal, $originalData, $tipoDeCompra)
+    protected function googleResponseValidator($gFinal, $originalData, $tipoDeCompra)
     {
         $dataDeseada = $this->requiredDataBuilder($tipoDeCompra);
         $comparacion = array_diff_key($dataDeseada, $gFinal);
@@ -213,7 +220,7 @@ class ControllerExtensionPaymentTodopago extends Controller
     }
 
     //Construye el array a pedir
-    private function requiredDataBuilder($tipoDeCompra)
+    protected function requiredDataBuilder($tipoDeCompra)
     {
         $arrayDeseado = array(
             'CS' . $tipoDeCompra . 'TSTREET1' => 1,
@@ -240,7 +247,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function callSAR($authorizationHTTP, $mode, $paramsSAR)
+    protected function callSAR($authorizationHTTP, $mode, $paramsSAR)
     {
         $this->logger->info("params SAR: " . json_encode($paramsSAR));
         try {
@@ -420,7 +427,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function callGAA($authorizationHTTP, $mode, $optionsAnswer)
+    protected function callGAA($authorizationHTTP, $mode, $optionsAnswer)
     {
         $connector = new TodoPago\Sdk($authorizationHTTP, $mode);
         $rta_second_step = $connector->getAuthorizeAnswer($optionsAnswer);
@@ -464,7 +471,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function showCoupon($rta_second_step)
+    protected function showCoupon($rta_second_step)
     {
         $nroop = $this->order_id;
         $venc = $rta_second_step['Payload']['Answer']["COUPONEXPDATE"];
@@ -528,7 +535,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function getOptionsSARComercio()
+    protected function getOptionsSARComercio()
     {
         $paydata_comercial['URL_OK'] = $this->config->get('config_url') . "index.php?route=" . "extension/payment/todopago/second_step_todopago&Order=" . $this->order_id;
         $paydata_comercial['URL_ERROR'] = $this->config->get('config_url') . 'index.php?route=' . 'extension/payment/todopago/second_step_todopago&Order=' . $this->order_id;
@@ -538,7 +545,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         return $paydata_comercial;
     }
 
-    private function getOptionsSAROperacion($controlFraude)
+    protected function getOptionsSAROperacion($controlFraude)
     {
         $tipoForm = ($this->config->get('payment_todopago_formulario') == "hibrid" ? '-H' : '-E');
         $this->load->model('checkout/order');
@@ -567,7 +574,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         return $paydata_operation;
     }
 
-    private function get_authorizationHTTP()
+    protected function get_authorizationHTTP()
     {
 
         if ($this->get_mode() == "test") {
@@ -586,12 +593,12 @@ class ControllerExtensionPaymentTodopago extends Controller
         return $http_header;
     }
 
-    private function get_mode()
+    protected function get_mode()
     {
         return html_entity_decode($this->config->get('payment_todopago_modotestproduccion'));
     }
 
-    private function get_id_site()
+    protected function get_id_site()
     {
         if ($this->get_mode() == "test") {
             $idSite = html_entity_decode($this->config->get('payment_todopago_idsitetest'));
@@ -602,7 +609,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         return $idSite;
     }
 
-    private function get_security_code()
+    protected function get_security_code()
     {
         if ($this->get_mode() == "test") {
             return html_entity_decode($this->config->get('payment_todopago_securitytest'));
@@ -611,7 +618,7 @@ class ControllerExtensionPaymentTodopago extends Controller
         }
     }
 
-    private function setLoggerForPayment()
+    protected function setLoggerForPayment()
     {
         $this->load->model('checkout/order');
         $this->order = $this->model_checkout_order->getOrder($this->order_id);

@@ -243,7 +243,7 @@ h3 {
 }
 
 .billetera_virtual_tp,
-.billetera_tp,
+.todopago,
 .billeterafm_tp {
     border: 1px solid #c4c4c44d;
 }
@@ -309,8 +309,9 @@ p {
     display: none;
     width: 30px;
     transform: translateY(-120%);
-    margin-left: 230px;
-    position: absolute
+   /* margin-left: 230px;
+    position: absolute*/
+    float: right;
 }
 
 #tp-powered {

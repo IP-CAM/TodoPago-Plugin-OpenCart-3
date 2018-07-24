@@ -1,6 +1,7 @@
 <?php
 require_once DIR_APPLICATION . '../system/library/todopago/todopago_ctes.php';
 
+
 class ModelExtensionPaymentTodopago extends Model
 {
 
@@ -17,9 +18,9 @@ class ModelExtensionPaymentTodopago extends Model
     {
         $this->load->language('extension/payment/todopago');
         $method_data = array(
-            'code' => 'todopago',
-            'title' => $this->language->get('text_title'),
-            'terms' => '',
+            'code'       => 'todopago',
+            'title'      => $this->language->get('text_title'),
+            'terms'      => '',
             'sort_order' => $this->config->get('payment_todopago_sort_order')
         );
 
@@ -34,6 +35,7 @@ class ModelExtensionPaymentTodopago extends Model
     public function getProducts($order_id)
     {
         $products = $this->db->query("SELECT op.product_id, op.total, op.name, op.price, op.quantity, pd.description FROM `" . DB_PREFIX . "order_product` op INNER JOIN `" . DB_PREFIX . "product_description` pd ON op.product_id = pd.product_id  WHERE `order_id`=" . $order_id . " AND language_id = " . (int)$this->config->get('config_language_id') . ";");
+
         return $products->rows;
     }
 
@@ -52,7 +54,7 @@ class ModelExtensionPaymentTodopago extends Model
     {
         //$productCode = $this->getAttribute($productId, "codigo del producto");
 
-        $query = "SELECT c.name AS category FROM " . DB_PREFIX . "product AS p INNER JOIN " . DB_PREFIX . "product_to_category AS pc ON p.product_id = pc.product_id INNER JOIN " . DB_PREFIX . "category_description AS c ON pc.category_id = c.category_id WHERE p.product_id = " . $productId . ";";
+        $query  = "SELECT c.name AS category FROM " . DB_PREFIX . "product AS p INNER JOIN " . DB_PREFIX . "product_to_category AS pc ON p.product_id = pc.product_id INNER JOIN " . DB_PREFIX . "category_description AS c ON pc.category_id = c.category_id WHERE p.product_id = " . $productId . ";";
         $result = $this->db->query($query)->row;
 
         $productCode = array_key_exists('category', $result) ? $result['category'] : "default";
@@ -60,7 +62,7 @@ class ModelExtensionPaymentTodopago extends Model
         return ($productCode != null) ? $productCode : "default"; //Si no tiene categoría asignada, devueelve default.
     }
 
-    private function getAttribute($productId, $attribute)
+    protected function getAttribute($productId, $attribute)
     {
         try {
             $query = $this->db->query("SELECT " . DB_PREFIX . "product_attribute.text FROM " . DB_PREFIX . "product_attribute JOIN " . DB_PREFIX . "attribute ON " . DB_PREFIX . "attribute.attribute_id = " . DB_PREFIX . "product_attribute.attribute_id JOIN " . DB_PREFIX . "attribute_description ON " . DB_PREFIX . "attribute.attribute_id = " . DB_PREFIX . "attribute_description.attribute_id JOIN " . DB_PREFIX . "attribute_group_description ON " . DB_PREFIX . "attribute.attribute_group_id = " . DB_PREFIX . "attribute_group_description.attribute_group_id WHERE product_id = 31 AND " . DB_PREFIX . "attribute_description.name = '" . $attribute . "' AND " . DB_PREFIX . "attribute_group_description.name = 'Prevencion de Fraude'");
@@ -77,8 +79,9 @@ class ModelExtensionPaymentTodopago extends Model
     {
         $coupon_id = $this->db->query("SELECT coupon_id FROM  `" . DB_PREFIX . "coupon_history` WHERE `order_id` = $order_id");
         if (isset($coupon_id->row['coupon_id'])) {
-            $coupon_id = $coupon_id->row['coupon_id'];
+            $coupon_id   = $coupon_id->row['coupon_id'];
             $coupon_code = $this->db->query("SELECT code FROM `" . DB_PREFIX . "coupon` WHERE `coupon_id` = $coupon_id");
+
             return $coupon_code->row['code'];
         } else {
             return null;
@@ -96,6 +99,7 @@ class ModelExtensionPaymentTodopago extends Model
     public function getQtyOrders($customerId)
     {
         $qty = $this->db->query("SELECT COUNT(*) AS qty FROM `" . DB_PREFIX . "order` WHERE customer_id = $customerId;");
+
         return $qty->row['qty'];
     }
 
@@ -107,17 +111,20 @@ class ModelExtensionPaymentTodopago extends Model
     public function editPaymentMethodOrder($order_id)
     {
         $query = "UPDATE `" . DB_PREFIX . "order` SET payment_method='<img src=" . '"' . "https://todopago.com.ar/sites/todopago.com.ar/files/pluginstarjeta.jpg" . '" style="width: 220px;"' . ">' WHERE order_id=" . $order_id . ";";
+
         return $this->db->query($query);
     }
 
     public function getErrorInfo($error_code)
     {
         $error_code = strval($error_code);
-        $error = array_key_exists($error_code, $this->cybersource_errors) ? $this->cybersource_errors[$error_code] : '';
+        $error      = array_key_exists($error_code,
+            $this->cybersource_errors) ? $this->cybersource_errors[$error_code] : '';
+
         return $error;
     }
 
-    private function fillCyberSourceError()
+    protected function fillCyberSourceError()
     {
         $this->cybersource_errors = array(
             '98001' => 'El campo CSBTCITY es requerido',

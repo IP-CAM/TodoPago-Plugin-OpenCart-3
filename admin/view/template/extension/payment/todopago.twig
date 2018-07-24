@@ -54,6 +54,7 @@
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#tab-general" data-toggle="tab">GENERAL</a>
                         </li>
+                        <li><a href="#tab-billetera" data-toggle="tab">BILLETERA VIRTUAL</a></li>
                         <li><a href="#tab-test" data-toggle="tab">AMBIENTE TEST</a>
                         </li>
                         <li><a href="#tab-produccion" data-toggle="tab">AMBIENTE PRODUCCION</a>
@@ -73,6 +74,24 @@
                                 <div class="field col-sm-5">
                                     <select class="form-control" name="payment_todopago_status"
                                             id="payment_todopago_status">
+                                        <option value="1" {% if payment_todopago_status %} {{ 'selected' }} {% endif %}>
+                                            {{ text_enabled }}
+                                        </option>
+                                        <option value="0" {% if payment_todopago_status == 0 %} {{ 'selected' }} {% endif %}>
+                                            {{ text_disabled }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="info-field col-sm-5">
+                                    <div class="info-field col-sm-5"><em>Activa y desactiva el módulo de pago</em>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" style="opacity: 0; height: 0; margin: 0; padding: 0">
+                                <label class="col-sm-2 control-label" for="payment_todopagobilletera_status">Activar</label>
+                                <div class="field col-sm-5">
+                                    <select class="form-control" name="payment_todopagobilletera_status"
+                                            id="payment_todopagobilletera_status">
                                         <option value="1" {% if payment_todopago_status %} {{ 'selected' }} {% endif %}>
                                             {{ text_enabled }}
                                         </option>
@@ -395,13 +414,32 @@
                                 </div>
                             </div>
                         </div>
-                        <!--END TAB AMBIENTE PRODUCCION -->
+                        <!-- END TAB AMBIENTE PRODUCCION -->
+
+                        <!-- TAB BILLETERA -->
+
+                        <div class="tab-pane" id="tab-billetera">
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_todopagobilletera_banner">
+                                    Banner para Billetera Virtual
+                                </label>
+                                <div class="field col-sm-5">
+                                    {%  for banner in billetera_banners %}
+                                        <input {% if payment_todopagobilletera_banner == '' and loop.index == 1  %} checked="checked" {% endif %} type="radio" class="form-control" name="payment_todopagobilletera_banner" value="{{ banner["value"] }}" {% if banner["value"] == payment_todopagobilletera_banner %} checked="checked" {% endif %} }>
+                                        <img src="{{ banner["img"] }}"  style="margin-left: 40px; transform: translateY(-50%);">
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- END TAB BILLETERA -->
 
                         <!-- TAB ESTADO DEL PEDIDO -->
                         <div class="tab-pane" id="tab-estadosdelpedido">
                             <div class="form-group required">
                                 <label class="col-sm-2 control-label" for="payment_todopago_order_status_id_pro">Estado
-                                    cuando
+                                      cuando
                                     la transaccion ha sido iniciada</label>
                                 <div class="field col-sm-5">
                                     <select class="form-control" name="payment_todopago_order_status_id_pro"
